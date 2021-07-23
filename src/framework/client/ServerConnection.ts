@@ -1,13 +1,13 @@
-import { PatchOperation } from 'filter-mirror';
-import { applyPatch } from './applyPatch';
 import { IEvent, SystemEvent } from './ServerToClientMessage';
+import { applyChanges } from 'megapatch/lib/applyChanges';
+import { Patch } from 'megapatch/lib/Patch';
 
 export interface ConnectionMetadata {
     name: string;
 }
 
 export interface ConnectionParameters<
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {} = {}
 > {
@@ -23,16 +23,12 @@ export interface ConnectionParameters<
 
 export abstract class ServerConnection<
     TClientCommand,
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {} = {}
 > {
     constructor(
-        params: ConnectionParameters<
-            TServerEvent,
-            TClientState,
-            TLocalState
-        >
+        params: ConnectionParameters<TServerEvent, TClientState, TLocalState>
     ) {
         this.receiveEvent = params.receiveEvent;
         this.receiveError = params.receiveError;
@@ -40,7 +36,9 @@ export abstract class ServerConnection<
         this._clientState = params.initialClientState;
     }
 
-    protected readonly receiveEvent: (event: TServerEvent | SystemEvent) => void;
+    protected readonly receiveEvent: (
+        event: TServerEvent | SystemEvent
+    ) => void;
     protected readonly receiveError: (message: string) => void;
     private readonly clientStateChanged?: (
         prevState: TClientState,
@@ -62,13 +60,13 @@ export abstract class ServerConnection<
         }
     }
 
-    protected receiveDeltaState(delta: PatchOperation[]) {
+    protected receiveDeltaState(delta: Patch) {
         if (!delta) {
             return;
         }
 
         const prevState = this._clientState;
-        const newState = applyPatch(prevState, delta);
+        const newState = applyChanges(prevState, delta);
 
         if (newState !== prevState && this.clientStateChanged) {
             this._clientState = newState;

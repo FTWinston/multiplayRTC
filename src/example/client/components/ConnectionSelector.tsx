@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ServerConnection } from '../../../framework/ServerConnection';
-import { RemoteServerConnection } from '../../../framework/RemoteServerConnection';
+import { ServerConnection } from '../../../framework/client/ServerConnection';
+import { RemoteServerConnection } from '../../../framework/client/RemoteServerConnection';
 import { ClientCommand } from '../../shared/ClientCommand';
 import { ServerEvent } from '../../shared/ServerEvent';
 import { ClientState } from '../../shared/ClientState';
 import ServerWorker from '../../server/worker';
-import { LocalServerConnection } from '../../../framework/LocalServerConnection';
+import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
 import { defaultSignalSettings } from '../../../framework/SignalConnection';
 
 export type TypedConnection = ServerConnection<

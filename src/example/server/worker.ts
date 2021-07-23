@@ -1,11 +1,14 @@
 import { TestServer } from './TestServer';
+import { LocalClientConnectionProvider } from '../../framework/server/LocalClientConnection';
+import { ServerEvent } from '../shared/ServerEvent';
+import { ClientCommand } from '../shared/ClientCommand';
 
 export default {} as typeof Worker & (new () => Worker);
 
 console.log('server worker started');
 
-const worker: Worker = self as any;
+const localConnectionProvider = new LocalClientConnectionProvider<ClientCommand, ServerEvent>('local');
 
-const server = new TestServer((msg) => worker.postMessage(msg));
+const remoteConnectionProvider = xxx;
 
-worker.onmessage = (e) => server.receiveMessage(e.data);
+const server = new TestServer(localConnectionProvider);

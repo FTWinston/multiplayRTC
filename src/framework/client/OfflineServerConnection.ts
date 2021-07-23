@@ -11,21 +11,16 @@ import { ControlOperation, IEvent, SystemEvent } from './ServerToClientMessage';
 import { PatchOperation } from 'filter-mirror';
 
 export interface OfflineConnectionParameters<
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {} = {}
->
-    extends ConnectionParameters<
-        TServerEvent,
-        TClientState,
-        TLocalState
-    > {
+> extends ConnectionParameters<TServerEvent, TClientState, TLocalState> {
     worker: Worker;
 }
 
 export class OfflineServerConnection<
     TClientCommand,
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {} = {}
 > extends ServerConnection<
@@ -108,11 +103,7 @@ export class OfflineServerConnection<
         this.receiveEvent(event);
     }
 
-    protected dispatchFullState(
-        client: string,
-        state: string,
-        time: number
-    ) {
+    protected dispatchFullState(client: string, state: string, time: number) {
         this.sendMessageToServer({
             type: ServerWorkerMessageInType.Acknowledge,
             who: this.localId,
@@ -167,7 +158,7 @@ export class OfflineServerConnection<
     get localId() {
         return 'local';
     }
-    
+
     get sessionId() {
         return '';
     }

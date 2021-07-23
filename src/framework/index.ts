@@ -1,10 +1,7 @@
 export { ServerConnection } from './ServerConnection';
-export { SimulatingServer } from './SimulatingServer';
-export { StatefulServer } from './StatefulServer';
+export { IServer } from './server/Server';
 export { OfflineServerConnection } from './OfflineServerConnection';
+export { createOnlineConnection } from './client/createOnlineConnection';
 export { LocalServerConnection } from './LocalServerConnection';
-export { RemoteServerConnection } from './RemoteServerConnection';
+export { RemoteServerConnection } from './client/RemoteServerConnection';
 export { SystemEvent } from './ServerToClientMessage';
-export { ServerWorkerMessageIn } from './ServerWorkerMessageIn';
-export { ServerWorkerMessageOut } from './ServerWorkerMessageOut';
-export { FieldMappings, extraFields, anyOtherFields, shouldMap } from 'filter-mirror';

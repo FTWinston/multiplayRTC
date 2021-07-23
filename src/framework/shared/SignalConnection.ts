@@ -1,5 +1,5 @@
 interface RTCIceServer {
-    credential?: string | RTCOAuthCredential;
+    credential?: string;
     credentialType?: RTCIceCredentialType;
     urls: string | string[];
     username?: string;
@@ -21,11 +21,11 @@ export interface IConnectionSettings {
 }
 
 export abstract class SignalConnection {
-    private readonly socket: WebSocket;
+    private socket: WebSocket;
     protected readonly settings: IConnectionSettings;
 
     constructor(
-        protected readonly disconnected: () => void,
+        private readonly disconnected: () => void,
         settings: Partial<IConnectionSettings> = {}
     ) {
         this.settings = {
@@ -38,7 +38,9 @@ export abstract class SignalConnection {
                   }
                 : defaultSignalSettings.rtcConfig,
         };
+    }
 
+    protected connectSignal() {
         this.socket = new WebSocket(this.settings.signalUrl);
 
         this.socket.onopen = (event) => this.socketOpened(event);

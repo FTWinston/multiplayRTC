@@ -1,4 +1,4 @@
-import { ServerWorkerMessageInType } from './ServerWorkerMessageIn';
+import { ServerWorkerMessageInType } from '../ServerWorkerMessageIn';
 import {
     eventMessageIdentifier,
     deltaStateMessageIdentifier,
@@ -7,46 +7,42 @@ import {
     controlMessageIdentifier,
     ControlOperation,
     ServerToClientMessage,
-    SystemEvent,
+    CommonEvent,
     IEvent,
-} from './ServerToClientMessage';
+} from '../shared/ServerToClientMessage';
 import {
     OfflineServerConnection,
     OfflineConnectionParameters,
 } from './OfflineServerConnection';
-import { ConnectionManager } from './ConnectionManager';
-import { IClientConnection } from './IClientConnection';
-import { IConnectionSettings } from './SignalConnection';
-import { PatchOperation } from 'filter-mirror';
+import { ConnectionManager } from '../ConnectionManager';
+import { IServerToClientConnection } from '../server/IServerToClientConnection';
+import { IConnectionSettings } from '../shared/SignalConnection';
+import { Patch } from 'megapatch/lib/Patch';
 
 export interface LocalConnectionParameters<
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {}
->
-    extends OfflineConnectionParameters<
-        TServerEvent,
-        TClientState,
-        TLocalState
-    > {
+> extends OfflineConnectionParameters<TServerEvent, TClientState, TLocalState> {
     signalSettings: IConnectionSettings;
     clientName: string;
     ready: () => void;
 }
 
 export class LocalServerConnection<
-    TClientCommand,
-    TServerEvent extends IEvent,
-    TClientState extends {},
-    TLocalState extends {} = {}
->
+        TClientCommand,
+        TServerEvent,
+        TClientState,
+        TLocalState extends {} = {}
+    >
     extends OfflineServerConnection<
         TClientCommand,
         TServerEvent,
         TClientState,
         TLocalState
     >
-    implements IClientConnection<TServerEvent> {
+    implements IServerToClientConnection<TClientCommand, TServerEvent>
+{
     private clients: ConnectionManager<
         TClientCommand,
         TServerEvent,
@@ -97,17 +93,9 @@ export class LocalServerConnection<
         // TODO: can we avoid having this AND separate dispatch operations?
 
         if (message[0] === fullStateMessageIdentifier) {
-            super.dispatchFullState(
-                this.clientName,
-                message[1],
-                message[2]
-            );
+            super.dispatchFullState(this.clientName, message[1], message[2]);
         } else if (message[0] === deltaStateMessageIdentifier) {
-            super.dispatchDeltaState(
-                this.clientName,
-                message[1],
-                message[2]
-            );
+            super.dispatchDeltaState(this.clientName, message[1], message[2]);
         } else if (message[0] === eventMessageIdentifier) {
             super.dispatchEvent(this.clientName, message[1]);
         } else if (message[0] === errorMessageIdentifier) {
@@ -119,16 +107,12 @@ export class LocalServerConnection<
 
     protected dispatchEvent(
         client: string | undefined,
-        event: TServerEvent | SystemEvent
+        event: TServerEvent | CommonEvent
     ) {
         this.clients.sendToClient(client, [eventMessageIdentifier, event]);
     }
 
-    protected dispatchFullState(
-        client: string,
-        state: string,
-        time: number
-    ) {
+    protected dispatchFullState(client: string, state: string, time: number) {
         this.clients.sendToClient(client, [
             fullStateMessageIdentifier,
             state,
@@ -136,11 +120,7 @@ export class LocalServerConnection<
         ]);
     }
 
-    protected dispatchDeltaState(
-        client: string,
-        state: PatchOperation[],
-        time: number
-    ) {
+    protected dispatchDeltaState(client: string, state: Patch[], time: number) {
         this.clients.sendToClient(client, [
             deltaStateMessageIdentifier,
             state,

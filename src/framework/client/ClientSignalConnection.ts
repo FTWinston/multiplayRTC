@@ -1,4 +1,7 @@
-import { SignalConnection, IConnectionSettings } from './SignalConnection';
+import {
+    SignalConnection,
+    IConnectionSettings,
+} from '../shared/SignalConnection';
 
 export class ClientSignalConnection extends SignalConnection {
     private readonly peer: RTCPeerConnection;
@@ -11,6 +14,8 @@ export class ClientSignalConnection extends SignalConnection {
         disconnected: () => void
     ) {
         super(disconnected, settings);
+
+        this.connectSignal();
 
         this.peer = this.createPeer();
 
@@ -31,7 +36,7 @@ export class ClientSignalConnection extends SignalConnection {
     }
 
     protected async socketOpened() {
-        this.gatherIce(this.peer, name);
+        this.gatherIce(this.peer, this.clientName);
 
         const offer = await this.peer.createOffer();
 

@@ -2,33 +2,19 @@ import { ClientCommand } from '../shared/ClientCommand';
 import { ServerEvent } from '../shared/ServerEvent';
 import { ServerState } from './ServerState';
 import { Player, ClientState } from '../shared/ClientState';
-import { SimulatingServer } from '../../framework/SimulatingServer';
-import { ServerWorkerMessageOut } from '../../framework/ServerWorkerMessageOut';
-import { FieldMappings, anyOtherFields } from 'filter-mirror';
+import { StatefulServer } from '../../framework/server/StatefulServer';
+import { IServerToClientConnectionProvider } from '../../framework/server/IServerToClientConnection';
 
 const tickInterval = 500; // this many milliseconds between each server tick
 
-export class TestServer extends SimulatingServer<
-    ServerState,
-    ServerState,
+export class TestServer extends StatefulServer<
     ClientCommand,
     ServerEvent
 > {
     constructor(
-        sendMessage: (
-            message: ServerWorkerMessageOut<ServerEvent>
-        ) => void
+        ...connectionProviders: IServerToClientConnectionProvider<ClientCommand, ServerEvent>[]
     ) {
-        super(
-            {
-                rules: {
-                    active: true,
-                },
-                players: {},
-            },
-            sendMessage,
-            tickInterval
-        );
+        super(connectionProviders);
     }
 
     protected clientJoined(name: string) {
@@ -92,9 +78,14 @@ export class TestServer extends SimulatingServer<
 
     protected mapClientState(): FieldMappings<ServerState, ClientState> {
         return {
-            rules: true,
+            rules: {
+                active: true,
+            },
             players: {
-                [anyOtherFields]: true,
+                [anyOtherFields]: {
+                    x: true,
+                    y: true,
+                },
             },
         };
     }

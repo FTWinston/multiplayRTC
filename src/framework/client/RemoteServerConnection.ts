@@ -6,21 +6,16 @@ import {
     errorMessageIdentifier,
     ServerToClientMessage,
     IEvent,
-} from './ServerToClientMessage';
-import { acknowledgeMessageIdentifier } from './ClientToServerMessage';
-import { IConnectionSettings } from './SignalConnection';
+} from '../shared/ServerToClientMessage';
+import { acknowledgeMessageIdentifier } from '../shared/ClientToServerMessage';
+import { IConnectionSettings } from '../shared/SignalConnection';
 import { ClientSignalConnection } from './ClientSignalConnection';
 
 export interface RemoteConnectionParameters<
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {} = {}
->
-    extends ConnectionParameters<
-        TServerEvent,
-        TClientState,
-        TLocalState
-    > {
+> extends ConnectionParameters<TServerEvent, TClientState, TLocalState> {
     sessionId: string;
     clientName: string;
     signalSettings: IConnectionSettings;
@@ -29,7 +24,7 @@ export interface RemoteConnectionParameters<
 
 export class RemoteServerConnection<
     TClientCommand,
-    TServerEvent extends IEvent,
+    TServerEvent,
     TClientState extends {},
     TLocalState extends {} = {}
 > extends ServerConnection<

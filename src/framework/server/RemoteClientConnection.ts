@@ -1,32 +1,25 @@
-import { IClientConnection } from './IClientConnection';
+import { stringify } from 'enhancejson/lib/stringify';
+import { IServerToClientConnection } from './IServerToClientConnection';
 import {
     ServerToClientMessage,
-    deltaStateMessageIdentifier,
-    fullStateMessageIdentifier,
-    controlMessageIdentifier,
-    IEvent,
-} from './ServerToClientMessage';
-import {
-    ClientToServerMessage,
-    acknowledgeMessageIdentifier,
-    commandMessageIdentifier,
-} from './ClientToServerMessage';
+    ServerToClientMessageType,
+} from '../shared/ServerToClientMessage';
+import { ClientToServerMessage } from '../shared/ClientToServerMessage';
 
-export class RemoteClientConnection<
-    TClientCommand,
-    TServerEvent extends IEvent
-> implements IClientConnection<TServerEvent> {
+export class RemoteClientConnection<TClientCommand, TServerEvent>
+    implements IServerToClientConnection<TClientCommand, TServerEvent>
+{
     private readonly reliable: RTCDataChannel;
     private unreliable?: RTCDataChannel;
 
     constructor(
         readonly clientName: string,
         private readonly peer: RTCPeerConnection,
-        connected: () => void,
-        private readonly disconnected: () => void,
-        private readonly receiveAcknowledge: (time: number) => void,
-        private readonly receiveCommand: (
-            command: TClientCommand
+        connected: (
+            connection: RemoteClientConnection<TClientCommand, TServerEvent>
+        ) => void,
+        private readonly disconnected: (
+            connection: RemoteClientConnection<TClientCommand, TServerEvent>
         ) => void
     ) {
         this.reliable = peer.createDataChannel('reliable', {
@@ -34,7 +27,7 @@ export class RemoteClientConnection<
         });
 
         this.reliable.onopen = () => {
-            connected();
+            connected(this);
         };
 
         this.setupDataChannel(this.reliable);
@@ -59,24 +52,16 @@ export class RemoteClientConnection<
         };
 
         channel.onmessage = (event) => {
-            const data = JSON.parse(event.data) as ClientToServerMessage<
-                TClientCommand
-            >;
+            const data = JSON.parse(
+                event.data
+            ) as ClientToServerMessage<TClientCommand>;
 
-            if (data[0] === acknowledgeMessageIdentifier) {
-                this.receiveAcknowledge(data[1]);
-            } else if (data[0] === commandMessageIdentifier) {
-                this.receiveCommand(data[1]);
-            } else {
-                console.error(
-                    `Unexpected data received from ${this.clientName}: ${data[0]}`
-                );
-            }
+            this.receiveCallback(data);
         };
     }
 
     send(message: ServerToClientMessage<TServerEvent>): void {
-        if (message[0] === controlMessageIdentifier) {
+        if (message[0] === ServerToClientMessageType.Control) {
             if (message[1] === 'simulate' && this.unreliable === undefined) {
                 this.unreliable = this.peer.createDataChannel('unreliable', {
                     ordered: false,
@@ -89,19 +74,34 @@ export class RemoteClientConnection<
             return;
         }
 
-        const channel = this.shouldSendReliably(message[0]) || !this.unreliable
-            ? this.reliable
-            : this.unreliable;
+        const channel =
+            this.shouldSendReliably(message[0]) || !this.unreliable
+                ? this.reliable
+                : this.unreliable;
 
-        channel.send(JSON.stringify(message));
+        channel.send(stringify(message));
     }
 
-    private shouldSendReliably(messageType: string) {
+    private shouldSendReliably(messageType: ServerToClientMessageType) {
         return (
             this.unreliable === undefined ||
-            (messageType !== deltaStateMessageIdentifier &&
-                messageType !== fullStateMessageIdentifier)
+            (messageType !== ServerToClientMessageType.DeltaState &&
+                messageType !== ServerToClientMessageType.FullState)
         );
+    }
+
+    private receiveCallback: (
+        message: ClientToServerMessage<TClientCommand>
+    ) => void;
+
+    connect(
+        messageCallback: (
+            message: ClientToServerMessage<TClientCommand>
+        ) => void
+    ) {
+        // TODO: something
+
+        this.receiveCallback = messageCallback;
     }
 
     disconnect(): void {
@@ -120,6 +120,6 @@ export class RemoteClientConnection<
         }
 
         this.hasDisconnected = true;
-        this.disconnected();
+        this.disconnected(this);
     }
 }
