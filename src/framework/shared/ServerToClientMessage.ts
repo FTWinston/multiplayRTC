@@ -20,12 +20,9 @@ export type CommonEvent =
           client: string;
       };
 
-export type ControlOperation = 'simulate';
-
 export type ServerToClientMessage<TServerEvent> =
     | [ServerToClientMessageType.FullState, ClientState, number]
     | [ServerToClientMessageType.DeltaState, Patch[], number]
     | [ServerToClientMessageType.Event, TServerEvent]
     | [ServerToClientMessageType.CommonEvent, CommonEvent]
-    | [ServerToClientMessageType.Error, string]
-    | [ServerToClientMessageType.Control, ControlOperation];
+    | [ServerToClientMessageType.Error, string];

@@ -60,20 +60,16 @@ export class RemoteClientConnection<TClientCommand, TServerEvent>
         };
     }
 
+    finishConnecting() {
+        this.unreliable = this.peer.createDataChannel('unreliable', {
+            ordered: false,
+            maxRetransmits: 0,
+        });
+
+        this.setupDataChannel(this.unreliable);
+    }
+
     send(message: ServerToClientMessage<TServerEvent>): void {
-        if (message[0] === ServerToClientMessageType.Control) {
-            if (message[1] === 'simulate' && this.unreliable === undefined) {
-                this.unreliable = this.peer.createDataChannel('unreliable', {
-                    ordered: false,
-                    maxRetransmits: 0,
-                });
-
-                this.setupDataChannel(this.unreliable);
-            }
-
-            return;
-        }
-
         const channel =
             this.shouldSendReliably(message[0]) || !this.unreliable
                 ? this.reliable

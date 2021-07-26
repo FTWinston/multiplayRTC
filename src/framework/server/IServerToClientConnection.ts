@@ -4,6 +4,8 @@ import { ServerToClientMessage } from '../shared/ServerToClientMessage';
 export interface IServerToClientConnection<TClientCommand, TServerEvent> {
     readonly clientName: string;
 
+    finishConnecting(): void;
+
     send(message: ServerToClientMessage<TServerEvent>): void;
 
     connect(

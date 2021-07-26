@@ -1,6 +1,5 @@
 import {
     CommonEvent,
-    ControlOperation,
     ServerToClientMessage,
     ServerToClientMessageType,
 } from '../shared/ServerToClientMessage';
@@ -127,16 +126,6 @@ export class Server<TClientCommand, TServerEvent>
         this.sendMessage(client, [ServerToClientMessageType.Event, event]);
     }
 
-    protected sendControl(
-        client: ClientID | null,
-        operation: ControlOperation
-    ) {
-        this.sendMessage(client, [
-            ServerToClientMessageType.Control,
-            operation,
-        ]);
-    }
-
     protected addClientConnection(
         connection: IServerToClientConnection<TClientCommand, TServerEvent>
     ) {
@@ -181,7 +170,7 @@ export class Server<TClientCommand, TServerEvent>
 
         // Now that client has established a reliable connection, instruct them
         // to also connect unreliably, for use with sending state updates every tick.
-        connection.send([ServerToClientMessageType.Control, 'simulate']);
+        connection.finishConnecting();
 
         return true;
     }

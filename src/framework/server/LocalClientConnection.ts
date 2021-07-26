@@ -15,22 +15,20 @@ export class LocalClientConnection<TClientCommand, TServerEvent>
 {
     constructor(public readonly clientName: string) {}
 
-    public send(message: ServerToClientMessage<TServerEvent>) {
-        if (message[0] === ServerToClientMessageType.Control) {
-            return;
-        }
-
-        worker.postMessage(message);
-    }
-
     public connect(
         receive: (message: ClientToServerMessage<TClientCommand>) => void
     ) {
         worker.onmessage = (e) => receive(e.data);
     }
 
+    public finishConnecting() {}
+
     public disconnect() {
         worker.terminate();
+    }
+
+    public send(message: ServerToClientMessage<TServerEvent>) {
+        worker.postMessage(message);
     }
 }
 
