@@ -15,6 +15,7 @@ import {
     ClientToServerMessageType,
 } from '../shared/ClientToServerMessage';
 import { ClientStateManager } from './ClientStateManager';
+import { IServerConfig } from './IServerConfig';
 
 export interface IServer<TClientCommand, TServerEvent> {
     readonly clients: ReadonlyMap<
@@ -38,7 +39,7 @@ export class Server<TClientCommand, TServerEvent>
 {
     constructor(
         rules: IServerRulesEntity<TClientCommand, TServerEvent>,
-        public readonly tickInterval: number,
+        public readonly config: IServerConfig,
         ...connectionProviders: IServerToClientConnectionProvider<
             TClientCommand,
             TServerEvent
@@ -252,7 +253,7 @@ export class Server<TClientCommand, TServerEvent>
 
     // TODO: status? e.g. not started, active, paused, finished
     public get isRunning() {
-        return this.tickInterval !== undefined;
+        return this.tickTimer !== undefined;
     }
 
     private tick() {
@@ -284,8 +285,11 @@ export class Server<TClientCommand, TServerEvent>
             return;
         }
 
-        this.lastTickTime = performance.now() - this.tickInterval;
-        this.tickTimer = setInterval(() => this.tick(), this.tickInterval);
+        this.lastTickTime = performance.now() - this.config.tickInterval;
+        this.tickTimer = setInterval(
+            () => this.tick(),
+            this.config.tickInterval
+        );
     }
 
     public stop(message: string = 'This server has stopped') {

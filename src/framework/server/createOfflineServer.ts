@@ -1,3 +1,4 @@
+import { IServerConfig } from './IServerConfig';
 import { IServerRulesEntity } from './IServerEntity';
 import { LocalClientConnectionProvider } from './LocalClientConnection';
 import { Server } from './Server';
@@ -5,7 +6,7 @@ import { Server } from './Server';
 // To be called from in a web worker.
 export function createOfflineServer<TClientCommand, TServerEvent>(
     rules: IServerRulesEntity<TClientCommand, TServerEvent>,
-    tickInterval: number
+    config: Omit<IServerConfig, 'rtcConfig'>
 ) {
     const localConnectionProvider = new LocalClientConnectionProvider<
         TClientCommand,
@@ -14,7 +15,7 @@ export function createOfflineServer<TClientCommand, TServerEvent>(
 
     return new Server<TClientCommand, TServerEvent>(
         rules,
-        tickInterval,
+        { ...config, rtcConfig: {} },
         localConnectionProvider
     );
 }

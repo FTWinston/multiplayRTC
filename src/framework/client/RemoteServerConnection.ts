@@ -1,21 +1,13 @@
 import { ServerConnection, ConnectionParameters } from './ServerConnection';
-import {
-    eventMessageIdentifier,
-    deltaStateMessageIdentifier,
-    fullStateMessageIdentifier,
-    errorMessageIdentifier,
-    ServerToClientMessage,
-    IEvent,
-} from '../shared/ServerToClientMessage';
-import { acknowledgeMessageIdentifier } from '../shared/ClientToServerMessage';
+import { ServerToClientMessage } from '../shared/ServerToClientMessage';
+import { ClientToServerMessageType } from '../shared/ClientToServerMessage';
 import { IConnectionSettings } from '../shared/SignalConnection';
 import { ClientSignalConnection } from './ClientSignalConnection';
+import { stringify } from 'enhancejson/lib/stringify';
+import { parse } from 'enhancejson/lib/parse';
 
-export interface RemoteConnectionParameters<
-    TServerEvent,
-    TClientState extends {},
-    TLocalState extends {} = {}
-> extends ConnectionParameters<TServerEvent, TClientState, TLocalState> {
+export interface RemoteConnectionParameters<TServerEvent>
+    extends ConnectionParameters<TServerEvent> {
     sessionId: string;
     clientName: string;
     signalSettings: IConnectionSettings;
@@ -24,27 +16,14 @@ export interface RemoteConnectionParameters<
 
 export class RemoteServerConnection<
     TClientCommand,
-    TServerEvent,
-    TClientState extends {},
-    TLocalState extends {} = {}
-> extends ServerConnection<
-    TClientCommand,
-    TServerEvent,
-    TClientState,
-    TLocalState
-> {
+    TServerEvent
+> extends ServerConnection<TClientCommand, TServerEvent> {
     private reliable: RTCDataChannel;
     private unreliable: RTCDataChannel;
     private peer?: RTCPeerConnection;
     private clientName: string;
 
-    constructor(
-        params: RemoteConnectionParameters<
-            TServerEvent,
-            TClientState,
-            TLocalState
-        >
-    ) {
+    constructor(params: RemoteConnectionParameters<TServerEvent>) {
         super(params);
         this.clientName = params.clientName;
 
@@ -76,33 +55,11 @@ export class RemoteServerConnection<
                 this.reliable = event.channel;
 
                 this.reliable.onmessage = (event) => {
-                    const data = JSON.parse(
+                    const message = parse(
                         event.data
                     ) as ServerToClientMessage<TServerEvent>;
 
-                    switch (data[0]) {
-                        case fullStateMessageIdentifier:
-                            this.receiveFullState(JSON.parse(data[1]));
-                            break;
-
-                        case deltaStateMessageIdentifier:
-                            this.receiveDeltaState(data[1]);
-                            break;
-
-                        case eventMessageIdentifier:
-                            this.receiveEvent(data[1]);
-                            break;
-                        case errorMessageIdentifier:
-                            this.receiveError(data[1]);
-                            this.disconnect();
-                            break;
-                        default:
-                            console.log(
-                                'Unrecognised reliable message from server',
-                                event.data
-                            );
-                            break;
-                    }
+                    this.receiveMessageFromServer(message);
                 };
 
                 this.reliable.onclose = () => this.disconnect();
@@ -112,27 +69,11 @@ export class RemoteServerConnection<
                 this.unreliable = event.channel;
 
                 this.unreliable.onmessage = (event) => {
-                    const data = JSON.parse(
+                    const message = parse(
                         event.data
                     ) as ServerToClientMessage<TServerEvent>;
-                    switch (data[0]) {
-                        case fullStateMessageIdentifier:
-                            this.sendAcknowledgement(data[2]);
-                            this.receiveFullState(JSON.parse(data[1]));
-                            break;
 
-                        case deltaStateMessageIdentifier:
-                            this.sendAcknowledgement(data[2]);
-                            this.receiveDeltaState(data[1]);
-                            break;
-
-                        default:
-                            console.log(
-                                'Unrecognised unreliable message from server',
-                                event.data
-                            );
-                            break;
-                    }
+                    this.receiveMessageFromServer(message);
                 };
             } else {
                 console.log(
@@ -142,17 +83,25 @@ export class RemoteServerConnection<
         };
     }
 
-    sendCommand(command: TClientCommand) {
-        this.reliable.send(JSON.stringify([eventMessageIdentifier, command]));
-    }
-
-    sendAcknowledgement(time: number) {
-        this.unreliable?.send(
-            JSON.stringify([acknowledgeMessageIdentifier, time])
+    public override sendCommand(command: TClientCommand) {
+        this.reliable.send(
+            stringify([ClientToServerMessageType.Command, command])
         );
     }
 
+    public override sendAcknowledge(time: number) {
+        this.unreliable?.send(
+            stringify([ClientToServerMessageType.Acknowledge, time])
+        );
+    }
+
+    public override sendQuit() {
+        this.reliable?.send(stringify([ClientToServerMessageType.Quit]));
+    }
+
     disconnect() {
+        this.sendQuit();
+
         this.reliable.close();
         this.unreliable?.close();
         this.peer?.close();

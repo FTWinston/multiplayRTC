@@ -6,7 +6,6 @@ import { ServerEvent } from '../../shared/ServerEvent';
 import { ClientState } from '../../shared/ClientState';
 import ServerWorker from '../../server/worker';
 import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
-import { defaultSignalSettings } from '../../../framework/SignalConnection';
 
 export type TypedConnection = ServerConnection<
     ClientCommand,
