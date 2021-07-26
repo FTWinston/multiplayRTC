@@ -168,10 +168,6 @@ export class Server<TClientCommand, TServerEvent>
             client: connection.clientName,
         });
 
-        // Now that client has established a reliable connection, instruct them
-        // to also connect unreliably, for use with sending state updates every tick.
-        connection.finishConnecting();
-
         return true;
     }
 

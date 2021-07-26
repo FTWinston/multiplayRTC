@@ -21,8 +21,6 @@ export class LocalClientConnection<TClientCommand, TServerEvent>
         worker.onmessage = (e) => receive(e.data);
     }
 
-    public finishConnecting() {}
-
     public disconnect() {
         worker.terminate();
     }

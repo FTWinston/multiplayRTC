@@ -5,6 +5,7 @@ import {
     ServerToClientMessageType,
 } from '../shared/ServerToClientMessage';
 import { ClientToServerMessage } from '../shared/ClientToServerMessage';
+import { parse } from 'enhancejson/lib/parse';
 
 export class RemoteClientConnection<TClientCommand, TServerEvent>
     implements IServerToClientConnection<TClientCommand, TServerEvent>
@@ -25,12 +26,22 @@ export class RemoteClientConnection<TClientCommand, TServerEvent>
         this.reliable = peer.createDataChannel('reliable', {
             ordered: true,
         });
+        
+        this.unreliable = this.peer.createDataChannel('unreliable', {
+            ordered: false,
+            maxRetransmits: 0,
+        });
 
-        this.reliable.onopen = () => {
-            connected(this);
+        let connectedChannels = 0;
+
+        this.reliable.onopen = this.unreliable.onopen = () => {
+            if (++connectedChannels === 2) {
+                connected(this);
+            }
         };
 
         this.setupDataChannel(this.reliable);
+        this.setupDataChannel(this.unreliable);
 
         this.peer.onconnectionstatechange = () => {
             if (this.peer.connectionState !== 'connected') {
@@ -52,21 +63,12 @@ export class RemoteClientConnection<TClientCommand, TServerEvent>
         };
 
         channel.onmessage = (event) => {
-            const data = JSON.parse(
+            const data = parse(
                 event.data
             ) as ClientToServerMessage<TClientCommand>;
 
             this.receiveCallback(data);
         };
-    }
-
-    finishConnecting() {
-        this.unreliable = this.peer.createDataChannel('unreliable', {
-            ordered: false,
-            maxRetransmits: 0,
-        });
-
-        this.setupDataChannel(this.unreliable);
     }
 
     send(message: ServerToClientMessage<TServerEvent>): void {
@@ -95,8 +97,6 @@ export class RemoteClientConnection<TClientCommand, TServerEvent>
             message: ClientToServerMessage<TClientCommand>
         ) => void
     ) {
-        // TODO: something
-
         this.receiveCallback = messageCallback;
     }
 
