@@ -26,7 +26,7 @@ export class RemoteClientConnection<TClientCommand, TServerEvent>
         this.reliable = peer.createDataChannel('reliable', {
             ordered: true,
         });
-        
+
         this.unreliable = this.peer.createDataChannel('unreliable', {
             ordered: false,
             maxRetransmits: 0,

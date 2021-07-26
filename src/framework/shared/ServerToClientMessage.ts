@@ -7,7 +7,6 @@ export enum ServerToClientMessageType {
     CommonEvent = 'o',
     Event = 'c',
     Error = 'e',
-    Control = 'x',
 }
 
 export type CommonEvent =
