@@ -1,4 +1,4 @@
-export type ServerEvent =
+export type TestServerEvent =
 {
     type: 'explode',
     entity: string;

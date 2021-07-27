@@ -6,6 +6,14 @@ export type ClientID = string;
 
 export interface IServerState {
     readonly entities: ReadonlyMap<EntityID, IServerEntity>;
+
+    addEntity(entity: IServerEntity): EntityID;
+
+    deleteEntity(id: EntityID): void;
+
+    recalculateEntity(entityId: EntityID): void;
+
+    recalculateClient(clientId: ClientID): void;
 }
 
 export class ServerState<TClientCommand, TServerEvent> implements IServerState {

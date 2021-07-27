@@ -12,15 +12,15 @@ export interface IServerEntity extends IEntity {
     update?(dt: number): void;
 }
 
-export interface IServerRulesEntity<TClientCommand, TServerEvent>
+export interface IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>
     extends IServerEntity {
     readonly type: 'rules';
 
-    serverStarted?(server: IServer<TClientCommand, TServerEvent>): void;
+    serverStarted?(server: IServer<TClientInfo, TServerEvent>): void;
 
-    serverStopped?(server: IServer<TClientCommand, TServerEvent>): void;
+    serverStopped?(server: IServer<TClientInfo, TServerEvent>): void;
 
-    clientJoined?(client: ClientID): void;
+    clientJoined(client: ClientID): TClientInfo;
 
     clientDisconnected?(client: ClientID): void;
 

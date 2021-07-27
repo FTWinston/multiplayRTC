@@ -16,11 +16,8 @@ import {
 import { ClientStateManager } from './ClientStateManager';
 import { IServerConfig } from './IServerConfig';
 
-export interface IServer<TClientCommand, TServerEvent> {
-    readonly clients: ReadonlyMap<
-        ClientID,
-        IServerToClientConnection<TClientCommand, TServerEvent>
-    >;
+export interface IServer<TClientInfo, TServerEvent> {
+    readonly clients: ReadonlyMap<ClientID, TClientInfo>;
 
     readonly state: IServerState;
 
@@ -33,11 +30,11 @@ export interface IServer<TClientCommand, TServerEvent> {
     stop(message?: string): void;
 }
 
-export class Server<TClientCommand, TServerEvent>
-    implements IServer<TClientCommand, TServerEvent>
+export class Server<TClientInfo, TClientCommand, TServerEvent>
+    implements IServer<TClientInfo, TServerEvent>
 {
     constructor(
-        rules: IServerRulesEntity<TClientCommand, TServerEvent>,
+        rules: IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>,
         public readonly config: IServerConfig,
         ...connectionProviders: IServerToClientConnectionProvider<
             TClientCommand,
@@ -46,6 +43,7 @@ export class Server<TClientCommand, TServerEvent>
     ) {
         const rulesID = this.state.addEntity(rules);
         this.rules = this.state.getEntity(rulesID) as IServerRulesEntity<
+            TClientInfo,
             TClientCommand,
             TServerEvent
         >;
@@ -58,25 +56,28 @@ export class Server<TClientCommand, TServerEvent>
     private tickTimer: NodeJS.Timeout | undefined;
     private lastTickTime: number;
 
-    protected readonly rules: IServerRulesEntity<TClientCommand, TServerEvent>;
+    protected readonly rules: IServerRulesEntity<
+        TClientInfo,
+        TClientCommand,
+        TServerEvent
+    >;
 
     private readonly connectionProviders: IServerToClientConnectionProvider<
         TClientCommand,
         TServerEvent
     >[];
 
-    public readonly state = new ServerState<TClientCommand, TServerEvent>();
-
-    private readonly _clients = new Map<
+    private readonly clientConnections = new Map<
         ClientID,
         IServerToClientConnection<TClientCommand, TServerEvent>
     >();
 
-    public get clients(): ReadonlyMap<
-        ClientID,
-        IServerToClientConnection<TClientCommand, TServerEvent>
-    > {
-        return this._clients;
+    public readonly state = new ServerState<TClientCommand, TServerEvent>();
+
+    private readonly clientInfo = new Map<ClientID, TClientInfo>();
+
+    public get clients(): ReadonlyMap<ClientID, TClientInfo> {
+        return this.clientInfo;
     }
 
     public async initialise() {
@@ -88,7 +89,10 @@ export class Server<TClientCommand, TServerEvent>
                     // TODO: do something ... if game still in progress, presumably try to reconnect?
                 },
                 clientConnected: (clientConnection) =>
-                    this.addClientConnection(clientConnection),
+                    this.addClient(
+                        clientConnection.clientName,
+                        clientConnection
+                    ),
                 clientDisconnected: (clientConnection) =>
                     this.clientDisconnected(clientConnection.clientName),
             });
@@ -103,11 +107,11 @@ export class Server<TClientCommand, TServerEvent>
         message: ServerToClientMessage<TServerEvent>
     ) {
         if (client === null) {
-            for (const client of this._clients.values()) {
+            for (const client of this.clientConnections.values()) {
                 client.send(message);
             }
         } else {
-            this._clients.get(client)?.send(message);
+            this.clientConnections.get(client)?.send(message);
         }
     }
 
@@ -126,23 +130,19 @@ export class Server<TClientCommand, TServerEvent>
         this.sendMessage(client, [ServerToClientMessageType.Event, event]);
     }
 
-    protected addClientConnection(
+    protected addClient(
+        client: ClientID,
         connection: IServerToClientConnection<TClientCommand, TServerEvent>
     ) {
         const joinError = this.getJoinError(connection.clientName);
 
         if (joinError !== null) {
-            this.sendError(connection.clientName, joinError);
+            this.sendError(client, joinError);
             return false;
         }
 
         connection.connect((clientToServerMessage) => {
-            if (
-                !this.receiveMessage(
-                    connection.clientName,
-                    clientToServerMessage
-                )
-            ) {
+            if (!this.receiveMessage(client, clientToServerMessage)) {
                 console.log(
                     `received unrecognised message from ${connection.clientName}`,
                     clientToServerMessage
@@ -154,18 +154,18 @@ export class Server<TClientCommand, TServerEvent>
             console.log(`${connection.clientName} joined`);
         }
 
-        this._clients.set(connection.clientName, connection);
+        this.clientConnections.set(client, connection);
 
         this.state.addClient(
             connection.clientName,
             new ClientStateManager(connection, this.state)
         );
 
-        this.rules.clientJoined?.(connection.clientName);
+        this.clientInfo.set(client, this.rules.clientJoined(client));
 
         this.sendCommonEvent(null, {
             type: 'join',
-            client: connection.clientName,
+            client,
         });
 
         return true;
@@ -173,7 +173,7 @@ export class Server<TClientCommand, TServerEvent>
 
     private clientDisconnected(client: ClientID) {
         this.state.deleteClient(client);
-        if (!this._clients.delete(client)) {
+        if (!this.clientConnections.delete(client)) {
             return;
         }
 
