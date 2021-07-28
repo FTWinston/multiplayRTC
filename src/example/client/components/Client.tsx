@@ -1,23 +1,16 @@
 import * as React from 'react';
 import { ConnectionSelector, TypedConnection } from './ConnectionSelector';
-import { ServerEvent } from '../../shared/ServerEvent';
-import { ClientState } from '../../shared/ClientState';
+import { TestServerEvent } from '../../shared/TestServerEvent';
 import { useState } from 'react';
+import type { ClientState } from '../../../framework/server/ClientStateManager';
 
 interface IState {
     connection?: TypedConnection;
 }
 
-let clientState: ClientState = {
-    rules: {
-        active: false,
-    },
-    players: {},
-};
-
 export const Client: React.FC = () => {
     const [connection, setConnection] = useState<TypedConnection>();
-    const [state, setState] = useState<ClientState>(clientState);
+    const [state, setState] = useState<ClientState>(new Map());
 
     if (connection === undefined) {
         const stateReceived = (prevState: ClientState, state: ClientState) =>
@@ -41,17 +34,17 @@ export const Client: React.FC = () => {
 
     const players: JSX.Element[] = [];
 
-    for (const name in state.players) {
+    for (const [id, entity] of state.entries()) {
         players.push(
             <div
-                key={name}
+                key={id}
                 style={{
-                    left: state.players[name].x * 50,
+                    left: entity.x * 50,
                     margin: '2em 0',
                     position: 'relative',
                 }}
             >
-                {name}
+                {id}
             </div>
         );
     }
@@ -73,6 +66,6 @@ export const Client: React.FC = () => {
     );
 };
 
-function eventReceived(cmd: ServerEvent) {
+function eventReceived(cmd: TestServerEvent) {
     console.log('client received event', cmd);
 }

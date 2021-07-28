@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { ServerConnection } from '../../../framework/client/ServerConnection';
 import { RemoteServerConnection } from '../../../framework/client/RemoteServerConnection';
-import { ClientCommand } from '../../shared/ClientCommand';
-import { ServerEvent } from '../../shared/ServerEvent';
-import { ClientState } from '../../shared/ClientState';
+import { TestClientCommand } from '../../shared/TestClientCommand';
+import { TestServerEvent } from '../../shared/TestServerEvent';
 import ServerWorker from '../../server/worker';
 import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
+import type { ClientState } from '../../../framework/server/ClientStateManager';
+import { defaultSignalSettings } from '../../../framework/shared/SignalConnection';
 
 export type TypedConnection = ServerConnection<
-    ClientCommand,
-    ServerEvent,
-    ClientState
+    TestClientCommand,
+    TestServerEvent
 >;
 
 interface IProps {
-    receiveEvent: (event: ServerEvent) => void;
+    receiveEvent: (event: TestServerEvent) => void;
     stateChanged: (prevState: ClientState, state: ClientState) => void;
     connectionSelected: (conn: TypedConnection) => void;
 }
@@ -25,27 +25,17 @@ export const ConnectionSelector = (props: IProps) => {
 
     const selectLocal = () => {
         connection = new LocalServerConnection<
-            ClientCommand,
-            ServerEvent,
-            ClientState
-        >(
-            {
-                initialClientState: {
-                    rules: {
-                        active: false,
-                    },
-                    players: {},
-                },
-                clientName: localName,
-                signalSettings: defaultSignalSettings,
-                ready,
-                worker: new ServerWorker(),
-                receiveEvent: (evt) => props.receiveEvent(evt),
-                clientStateChanged: (prevState, state) =>
-                    props.stateChanged(prevState, state),
-                receiveError: (msg) => console.error(msg),
-            }
-        );
+            TestClientCommand,
+            TestServerEvent
+        >({
+            worker: new ServerWorker(),
+            receiveEvent: (evt) => props.receiveEvent(evt),
+            clientStateChanged: (prevState, state) =>
+                props.stateChanged(prevState, state),
+            receiveError: (msg) => console.error(msg),
+        });
+
+        ready();
     };
 
     const [sessionId, setSessionId] = useState('');
@@ -54,16 +44,9 @@ export const ConnectionSelector = (props: IProps) => {
 
     const selectRemote = () => {
         connection = new RemoteServerConnection<
-            ClientCommand,
-            ServerEvent,
-            ClientState
+            TestClientCommand,
+            TestServerEvent
         >({
-            initialClientState: {
-                rules: {
-                    active: false,
-                },
-                players: {},
-            },
             sessionId,
             signalSettings: defaultSignalSettings,
             clientName: localName,
