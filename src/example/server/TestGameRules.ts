@@ -37,7 +37,7 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
     }
 
     commandReceived(client: ClientID, command: TestClientCommand) {
-        const entityId = this.server.clients.get(client);
+        const entityId = this.server.clients.get(client)!;
         const player = this.server.state.entities.get(entityId) as Player;
 
         switch (command) {

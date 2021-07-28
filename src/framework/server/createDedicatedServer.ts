@@ -4,8 +4,12 @@ import { Server } from './Server';
 import { ServerSignalConnection } from './ServerSignalConnection';
 
 // Not to be called from in a web worker.
-export function createDedicatedServer<TClientCommand, TServerEvent>(
-    rules: IServerRulesEntity<TClientCommand, TServerEvent>,
+export function createDedicatedServer<
+    TClientInfo,
+    TClientCommand,
+    TServerEvent
+>(
+    rules: IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>,
     config: IServerConfig
 ) {
     const remoteConnectionProvider = new ServerSignalConnection<
@@ -13,7 +17,7 @@ export function createDedicatedServer<TClientCommand, TServerEvent>(
         TServerEvent
     >(config.rtcConfig);
 
-    return new Server<TClientCommand, TServerEvent>(
+    return new Server<TClientInfo, TClientCommand, TServerEvent>(
         rules,
         config,
         remoteConnectionProvider

@@ -3,7 +3,6 @@ import { ServerConnection } from '../../../framework/client/ServerConnection';
 import { RemoteServerConnection } from '../../../framework/client/RemoteServerConnection';
 import { TestClientCommand } from '../../shared/TestClientCommand';
 import { TestServerEvent } from '../../shared/TestServerEvent';
-import ServerWorker from '../../server/worker';
 import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
 import type { ClientState } from '../../../framework/server/ClientStateManager';
 import { defaultSignalSettings } from '../../../framework/shared/SignalConnection';
@@ -28,7 +27,7 @@ export const ConnectionSelector = (props: IProps) => {
             TestClientCommand,
             TestServerEvent
         >({
-            worker: new ServerWorker(),
+            worker: new Worker(new URL('../../server/offlineWorker', import.meta.url)),
             receiveEvent: (evt) => props.receiveEvent(evt),
             clientStateChanged: (prevState, state) =>
                 props.stateChanged(prevState, state),

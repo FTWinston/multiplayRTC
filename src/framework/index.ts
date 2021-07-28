@@ -1,7 +1,6 @@
-export { ServerConnection } from './ServerConnection';
-export { IServer } from './server/Server';
-export { OfflineServerConnection } from './OfflineServerConnection';
-export { createOnlineConnection } from './client/createOnlineConnection';
-export { LocalServerConnection } from './LocalServerConnection';
+export { ServerConnection } from './client/ServerConnection';
+export type { IServer } from './server/Server';
+export { IServerEntity, IServerRulesEntity } from './server/IServerEntity';
+export { LocalServerConnection } from './client/LocalServerConnection';
 export { RemoteServerConnection } from './client/RemoteServerConnection';
-export { SystemEvent } from './ServerToClientMessage';
+export { CommonEvent } from './shared/ServerToClientMessage';

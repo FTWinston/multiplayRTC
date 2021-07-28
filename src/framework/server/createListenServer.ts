@@ -5,8 +5,8 @@ import { Server } from './Server';
 import { WorkerServerSignalConnection } from './WorkerServerSignalConnection';
 
 // To be called from in a web worker.
-export function createListenServer<TClientCommand, TServerEvent>(
-    rules: IServerRulesEntity<TClientCommand, TServerEvent>,
+export function createListenServer<TClientInfo, TClientCommand, TServerEvent>(
+    rules: IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>,
     config: IServerConfig,
     localName: string
 ) {
@@ -20,7 +20,7 @@ export function createListenServer<TClientCommand, TServerEvent>(
         TServerEvent
     >(config.rtcConfig);
 
-    return new Server<TClientCommand, TServerEvent>(
+    return new Server<TClientInfo, TClientCommand, TServerEvent>(
         rules,
         config,
         localConnectionProvider,

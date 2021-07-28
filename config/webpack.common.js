@@ -9,18 +9,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /worker.ts$/,
-        use: [
-          {
-            loader: require.resolve('worker-loader'),
-            options: {
-              name: '[name].[hash].js',
-            },
-          },
-          'ts-loader',
-        ],
-      },
-      {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/
