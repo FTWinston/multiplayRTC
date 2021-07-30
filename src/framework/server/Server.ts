@@ -50,6 +50,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         this.connectionProviders = connectionProviders;
 
+        console.log('server created');
         this.resume();
     }
 
@@ -270,10 +271,11 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
             return;
         }
 
-        this.lastTickTime = performance.now() - this.config.tickInterval;
+        const tickIntervalMs = this.config.tickInterval * 1000;
+        this.lastTickTime = performance.now() - tickIntervalMs;
         this.tickTimer = setInterval(
             () => this.tick(),
-            this.config.tickInterval
+            tickIntervalMs
         );
     }
 
