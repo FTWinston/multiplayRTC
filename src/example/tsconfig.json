@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "outDir": "./lib",
     "noImplicitAny": true,
     "module": "es2020",
     "moduleResolution": "node",
@@ -12,6 +11,6 @@
     "strictNullChecks": true
   },
   "include": [
-    "src/framework", "src/declarations.d.ts",
+    ".", "../declarations.d.ts",
   ]
 }
