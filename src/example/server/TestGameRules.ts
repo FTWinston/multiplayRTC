@@ -2,8 +2,8 @@ import { IServerRulesEntity } from '../../framework/server/IServerEntity';
 import { IServer } from '../../framework/server/Server';
 import { TestClientCommand } from '../shared/TestClientCommand';
 import { TestServerEvent } from '../shared/TestServerEvent';
-import { Player } from '../shared/Player';
 import type { ClientID, EntityID } from '../../framework/server/ServerState';
+import { Player } from './Player';
 
 export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCommand, TestServerEvent> {
     readonly type: 'rules';
@@ -17,11 +17,7 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
     clientJoined(client: ClientID) {
         console.log(`${client} connected`);
 
-        const player: Player = {
-            type: 'player',
-            x: 0,
-            y: 0,
-        };
+        const player = new Player(0, 0);
 
         return this.server.state.addEntity(player);
     }
@@ -34,6 +30,10 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
         if (entityId !== undefined) {
             this.server.state.deleteEntity(entityId);
         }
+    }
+
+    update(tickDuration: number) {
+        console.log('updating rules');
     }
 
     commandReceived(client: ClientID, command: TestClientCommand) {
@@ -52,7 +52,7 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
                 break;
             }
             default: {
-                console.log(`${name} issued unhandled command`, command);
+                console.log(`${client} issued unhandled command`, command);
                 break;
             }
         }

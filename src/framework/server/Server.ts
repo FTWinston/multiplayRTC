@@ -50,8 +50,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         this.connectionProviders = connectionProviders;
 
-        console.log('server created');
-        this.resume();
+        this.initialise();
     }
 
     private tickTimer: NodeJS.Timeout | undefined;
@@ -81,7 +80,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
         return this.clientInfo;
     }
 
-    public async initialise() {
+    private async initialise() {
         this.rules.serverStarted?.(this);
 
         for (const provider of this.connectionProviders) {
@@ -101,6 +100,8 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
             // TODO: do something with the sessionId ... I guess save it, and have it sent to every client?
             // Argh, we only care about a session ID from the remote connection provider.
         }
+
+        this.resume();
     }
 
     private sendMessage(
@@ -273,10 +274,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         const tickIntervalMs = this.config.tickInterval * 1000;
         this.lastTickTime = performance.now() - tickIntervalMs;
-        this.tickTimer = setInterval(
-            () => this.tick(),
-            tickIntervalMs
-        );
+        this.tickTimer = setInterval(() => this.tick(), tickIntervalMs);
     }
 
     public stop(message: string = 'This server has stopped') {
