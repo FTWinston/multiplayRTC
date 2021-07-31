@@ -1,9 +1,6 @@
 import { ServerConnection, ConnectionParameters } from './ServerConnection';
+import { ClientToServerMessageType } from '../shared/ClientToServerMessage';
 import workerRTC from 'worker-webrtc/window';
-import {
-    ClientToServerMessage,
-    ClientToServerMessageType,
-} from '../shared/ClientToServerMessage';
 
 export interface LocalConnectionParameters<TServerEvent>
     extends ConnectionParameters<TServerEvent> {
@@ -22,15 +19,6 @@ export class LocalServerConnection<
     }
 
     private readonly worker: Worker;
-
-    /*
-    protected onServerReady() {
-        this.sendMessageToServer({
-            type: ServerWorkerMessageInType.Join,
-            who: this.localId,
-        });
-    }
-    */
 
     public override sendCommand(command: TClientCommand) {
         this.worker.postMessage([ClientToServerMessageType.Command, command]);
