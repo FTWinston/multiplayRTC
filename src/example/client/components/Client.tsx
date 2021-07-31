@@ -3,6 +3,7 @@ import { ConnectionSelector, TypedConnection } from './ConnectionSelector';
 import { TestServerEvent } from '../../shared/TestServerEvent';
 import { useState } from 'react';
 import type { ClientState } from '../../../framework/server/ClientStateManager';
+import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
 
 interface IState {
     connection?: TypedConnection;
@@ -27,6 +28,7 @@ export const Client: React.FC = () => {
             <ConnectionSelector
                 connectionSelected={connectionSelected}
                 receiveEvent={eventReceived}
+                receiveCommonEvent={commonEventReceived}
                 stateChanged={stateReceived}
             />
         );
@@ -67,5 +69,9 @@ export const Client: React.FC = () => {
 };
 
 function eventReceived(cmd: TestServerEvent) {
+    console.log('client received event', cmd);
+}
+
+function commonEventReceived(cmd: CommonEvent) {
     console.log('client received event', cmd);
 }

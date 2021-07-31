@@ -6,6 +6,7 @@ import { TestServerEvent } from '../../shared/TestServerEvent';
 import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
 import type { ClientState } from '../../../framework/server/ClientStateManager';
 import { defaultSignalSettings } from '../../../framework/shared/SignalConnection';
+import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
 
 export type TypedConnection = ServerConnection<
     TestClientCommand,
@@ -14,6 +15,7 @@ export type TypedConnection = ServerConnection<
 
 interface IProps {
     receiveEvent: (event: TestServerEvent) => void;
+    receiveCommonEvent: (event: CommonEvent) => void;
     stateChanged: (prevState: ClientState, state: ClientState) => void;
     connectionSelected: (conn: TypedConnection) => void;
 }
@@ -29,6 +31,7 @@ export const ConnectionSelector = (props: IProps) => {
         >({
             worker: new Worker(new URL('../../server/offlineWorker', import.meta.url)),
             receiveEvent: (evt) => props.receiveEvent(evt),
+            receiveCommonEvent: (evt) => props.receiveCommonEvent(evt),
             clientStateChanged: (prevState, state) =>
                 props.stateChanged(prevState, state),
             receiveError: (msg) => console.error(msg),
@@ -50,6 +53,7 @@ export const ConnectionSelector = (props: IProps) => {
             signalSettings: defaultSignalSettings,
             clientName: localName,
             receiveEvent: (cmd) => props.receiveEvent(cmd),
+            receiveCommonEvent: (cmd) => props.receiveCommonEvent(cmd),
             clientStateChanged: (prevState, state) =>
                 props.stateChanged(prevState, state),
             receiveError: (msg) => console.error(msg),

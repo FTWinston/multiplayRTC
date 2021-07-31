@@ -10,6 +10,7 @@ import {
 
 export interface ConnectionParameters<TServerEvent> {
     receiveEvent: (cmd: TServerEvent) => void;
+    receiveCommonEvent: (cmd: CommonEvent) => void;
     clientStateChanged?: (
         prevState: Readonly<ClientState>,
         newState: Readonly<ClientState>
@@ -20,6 +21,7 @@ export interface ConnectionParameters<TServerEvent> {
 export abstract class ServerConnection<TClientCommand, TServerEvent> {
     constructor(params: ConnectionParameters<TServerEvent>) {
         this.receiveEvent = params.receiveEvent;
+        this.receiveCommonEvent = params.receiveCommonEvent;
         this.receiveError = params.receiveError;
         this.clientStateChanged = params.clientStateChanged;
     }
