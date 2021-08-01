@@ -58,7 +58,7 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
                 }
 
                 const entityCopy = partialCopy(entity, fieldsSet);
-                this.entitiesById.set(entityId, entityCopy);
+                this.proxiedEntitiesById.set(entityId, entityCopy);
             }
         }
     }

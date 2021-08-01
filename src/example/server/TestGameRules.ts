@@ -10,6 +10,11 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
 
     private server: IServer<EntityID, TestServerEvent>;
 
+    // TODO: Can we avoid HAVING to do this to avoid trying to send the server?
+    determineFieldsToSend() {
+        return [];
+    }
+
     serverStarted(server: IServer<EntityID, TestServerEvent>) {
         this.server = server;
     }
