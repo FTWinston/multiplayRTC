@@ -1,7 +1,7 @@
 import { IPlayer } from '../shared/IPlayer';
 
 export class Player implements IPlayer {
-    type: 'player';
+    public readonly type = 'player';
 
     constructor(public x: number, public y: number) {
 

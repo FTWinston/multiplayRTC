@@ -6,7 +6,7 @@ import type { ClientID, EntityID } from '../../framework/server/ServerState';
 import { Player } from './Player';
 
 export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCommand, TestServerEvent> {
-    readonly type: 'rules';
+    public readonly type = 'rules';
 
     private server: IServer<EntityID, TestServerEvent>;
 
@@ -35,10 +35,6 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
         if (entityId !== undefined) {
             this.server.state.deleteEntity(entityId);
         }
-    }
-
-    update(tickDuration: number) {
-        console.log('updating rules');
     }
 
     commandReceived(client: ClientID, command: TestClientCommand) {

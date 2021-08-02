@@ -254,6 +254,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         const sendTime = Math.round(tickStart);
         for (const [_, stateManager] of this.state.clients) {
+            stateManager.update();
             stateManager.sendState(sendTime);
         }
     }

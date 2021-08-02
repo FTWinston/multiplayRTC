@@ -48,12 +48,14 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
                     entity.determineFieldsToSend?.(
                         this.connection.clientName
                     ) ?? null;
+
                 const fieldsSet =
                     fieldsArray === null
                         ? null
-                        : new Set(...fieldsArray, 'type');
+                        : new Set(...fieldsArray);
 
                 if (fieldsSet) {
+                    fieldsSet.add('type');
                     this.fieldsById.set(entityId, fieldsSet);
                 }
 
