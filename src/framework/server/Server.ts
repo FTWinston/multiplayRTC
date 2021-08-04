@@ -160,7 +160,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         this.state.addClient(
             connection.clientName,
-            new ClientStateManager(connection, this.state)
+            new ClientStateManager(connection, this.state, this.config)
         );
 
         this.clientInfo.set(client, this.rules.clientJoined(client));

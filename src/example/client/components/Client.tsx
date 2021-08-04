@@ -5,10 +5,6 @@ import { useState } from 'react';
 import type { ClientState } from '../../../framework/server/ClientStateManager';
 import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
 
-interface IState {
-    connection?: TypedConnection;
-}
-
 export const Client: React.FC = () => {
     const [connection, setConnection] = useState<TypedConnection>();
     const [state, setState] = useState<ClientState>(new Map());
@@ -37,18 +33,20 @@ export const Client: React.FC = () => {
     const players: JSX.Element[] = [];
 
     for (const [id, entity] of state.entries()) {
-        players.push(
-            <div
-                key={id}
-                style={{
-                    left: entity.x * 50,
-                    margin: '2em 0',
-                    position: 'relative',
-                }}
-            >
-                {id}
-            </div>
-        );
+        if (entity.type === 'player') {
+            players.push(
+                <div
+                    key={id}
+                    style={{
+                        left: entity.x * 50,
+                        margin: '2em 0',
+                        position: 'relative',
+                    }}
+                >
+                    {id}
+                </div>
+            );
+        }
     }
 
     return (

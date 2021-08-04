@@ -5,12 +5,13 @@ import { EntityID, IServerState } from './ServerState';
 import { IServerToClientConnection } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
 import { Patch } from 'megapatch/lib/Patch';
+import { IServerConfig } from './IServerConfig';
 
-export type ClientEntity = Record<string, any>;
+export type ClientEntity = Record<string, any> & { type: string };
 
 export type ClientState = Map<EntityID, ClientEntity>;
 
-const unacknowledgedDeltaInterval = 1000; // If we go for this many milliseconds with no acknowledgements, we give up on deltas and start sending full states
+const maxUnacknowlegedDeltaFrames = 8;
 
 export class ClientStateManager<TClientCommand, TServerEvent> {
     constructor(
@@ -18,13 +19,19 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
             TClientCommand,
             TServerEvent
         >,
-        protected readonly serverState: IServerState
+        protected readonly serverState: IServerState,
+        config: IServerConfig
     ) {
+        this.unacknowledgedDeltaInterval = config.tickInterval * 1000 * maxUnacknowlegedDeltaFrames;
+        this.lastAcknowledgedTime = -this.unacknowledgedDeltaInterval;
+
         this.allocateProxy();
         this.update();
     }
 
-    private lastAcknowledgedTime: number = -unacknowledgedDeltaInterval;
+    private readonly unacknowledgedDeltaInterval: number;
+
+    private lastAcknowledgedTime: number;
 
     private readonly unacknowledgedDeltas = new Map<number, Patch[]>();
 
@@ -60,7 +67,7 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
                 }
 
                 const entityCopy = partialCopy(entity, fieldsSet);
-                this.proxiedEntitiesById.set(entityId, entityCopy);
+                this.proxiedEntitiesById.set(entityId, entityCopy as ClientEntity);
             }
         }
     }
@@ -122,7 +129,7 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
     protected shouldSendFullState(time: number) {
         return (
             this.forceSendFullState ||
-            this.lastAcknowledgedTime <= time - unacknowledgedDeltaInterval
+            this.lastAcknowledgedTime <= time - this.unacknowledgedDeltaInterval
         );
     }
 
