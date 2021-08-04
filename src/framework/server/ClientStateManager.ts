@@ -117,7 +117,7 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
     }
 
     private getChanges() {
-        const patch = finishRecordingRaw(this.entitiesById);
+        const patch = finishRecordingRaw(this.proxiedEntitiesById);
 
         this.allocateProxy();
 
@@ -182,8 +182,6 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
             cumulativeDelta = [...cumulativeDelta, ...delta];
         }
 
-        // TODO: consider squashing duplicate entries.
-        // Would use json-squash here, but would then have to convert the patches to proper json patch standard.
         return cumulativeDelta;
     }
 }
