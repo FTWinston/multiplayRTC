@@ -1,5 +1,8 @@
 import { ClientToServerMessage } from '../shared/ClientToServerMessage';
-import { ServerToClientMessage, ServerToClientStateMessage } from '../shared/ServerToClientMessage';
+import {
+    ServerToClientMessage,
+    ServerToClientStateMessage,
+} from '../shared/ServerToClientMessage';
 
 export interface IStateMessageRecipient {
     readonly clientName: string;

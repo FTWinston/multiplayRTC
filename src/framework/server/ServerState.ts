@@ -12,10 +12,7 @@ export class ServerState implements IServerState {
     private readonly recalculateEntities = new Set<EntityID>();
     private readonly recalculateClients = new Set<ClientID>();
 
-    private readonly clientStates = new Map<
-        ClientID,
-        ClientStateManager
-    >();
+    private readonly clientStates = new Map<ClientID, ClientStateManager>();
 
     private nextID: EntityID = 1;
 
@@ -52,10 +49,7 @@ export class ServerState implements IServerState {
         return this.entitiesById;
     }
 
-    public get clients(): ReadonlyMap<
-        ClientID,
-        ClientStateManager
-    > {
+    public get clients(): ReadonlyMap<ClientID, ClientStateManager> {
         return this.clientStates;
     }
 
@@ -109,10 +103,7 @@ export class ServerState implements IServerState {
         this.recalculateClients.add(clientId);
     }
 
-    public addClient(
-        clientId: ClientID,
-        manager: ClientStateManager
-    ) {
+    public addClient(clientId: ClientID, manager: ClientStateManager) {
         if (this.clientStates.has(clientId)) {
             return;
         }

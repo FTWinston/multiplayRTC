@@ -52,7 +52,7 @@ export class ClientStateManager {
                     ) ?? null;
 
                 const fieldsSet =
-                    fieldsArray === null ? null : new Set(...fieldsArray);
+                    fieldsArray === null ? null : new Set(fieldsArray);
 
                 if (fieldsSet) {
                     fieldsSet.add('type');
