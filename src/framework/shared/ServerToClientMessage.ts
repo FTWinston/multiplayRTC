@@ -19,9 +19,12 @@ export type CommonEvent =
           client: string;
       };
 
+export type ServerToClientStateMessage =
+| [ServerToClientMessageType.FullState, ClientState, number]
+| [ServerToClientMessageType.DeltaState, Patch[], number];
+
 export type ServerToClientMessage<TServerEvent> =
-    | [ServerToClientMessageType.FullState, ClientState, number]
-    | [ServerToClientMessageType.DeltaState, Patch[], number]
+    | ServerToClientStateMessage
     | [ServerToClientMessageType.Event, TServerEvent]
     | [ServerToClientMessageType.CommonEvent, CommonEvent]
     | [ServerToClientMessageType.Error, string];

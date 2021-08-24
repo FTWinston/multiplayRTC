@@ -4,7 +4,7 @@ import { ClientStateManager } from './ClientStateManager';
 import { EntityID } from '../shared/entityTypes';
 import { IServerState } from './IServerState';
 
-export class ServerState<TClientCommand, TServerEvent> implements IServerState {
+export class ServerState implements IServerState {
     private readonly entitiesById = new Map<EntityID, IServerEntity>();
     private readonly idsByEntity = new Map<IServerEntity, EntityID>();
 
@@ -14,7 +14,7 @@ export class ServerState<TClientCommand, TServerEvent> implements IServerState {
 
     private readonly clientStates = new Map<
         ClientID,
-        ClientStateManager<TClientCommand, TServerEvent>
+        ClientStateManager
     >();
 
     private nextID: EntityID = 1;
@@ -54,7 +54,7 @@ export class ServerState<TClientCommand, TServerEvent> implements IServerState {
 
     public get clients(): ReadonlyMap<
         ClientID,
-        ClientStateManager<TClientCommand, TServerEvent>
+        ClientStateManager
     > {
         return this.clientStates;
     }
@@ -111,7 +111,7 @@ export class ServerState<TClientCommand, TServerEvent> implements IServerState {
 
     public addClient(
         clientId: ClientID,
-        manager: ClientStateManager<TClientCommand, TServerEvent>
+        manager: ClientStateManager
     ) {
         if (this.clientStates.has(clientId)) {
             return;

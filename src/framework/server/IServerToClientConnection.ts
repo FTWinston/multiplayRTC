@@ -1,9 +1,14 @@
 import { ClientToServerMessage } from '../shared/ClientToServerMessage';
-import { ServerToClientMessage } from '../shared/ServerToClientMessage';
+import { ServerToClientMessage, ServerToClientStateMessage } from '../shared/ServerToClientMessage';
 
-export interface IServerToClientConnection<TClientCommand, TServerEvent> {
+export interface IStateMessageRecipient {
     readonly clientName: string;
 
+    send(message: ServerToClientStateMessage): void;
+}
+
+export interface IServerToClientConnection<TClientCommand, TServerEvent>
+    extends IStateMessageRecipient {
     send(message: ServerToClientMessage<TServerEvent>): void;
 
     connect(

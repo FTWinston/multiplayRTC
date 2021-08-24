@@ -1,8 +1,8 @@
 import { recordChanges } from 'megapatch/lib/recordChanges';
 import { finishRecordingRaw } from 'megapatch/lib/finishRecording';
 import { partialCopy } from './partialCopy';
-import { IServerState } from './IServerState';
-import { IServerToClientConnection } from './IServerToClientConnection';
+import { IServerEntity } from './IServerEntity';
+import { IStateMessageRecipient } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
 import { Patch } from 'megapatch/lib/Patch';
 import { IServerConfig } from './IServerConfig';
@@ -10,13 +10,10 @@ import { ClientEntity, EntityID, ClientState } from '../shared/entityTypes';
 
 const maxUnacknowlegedDeltaFrames = 8;
 
-export class ClientStateManager<TClientCommand, TServerEvent> {
+export class ClientStateManager {
     constructor(
-        protected readonly connection: IServerToClientConnection<
-            TClientCommand,
-            TServerEvent
-        >,
-        protected readonly serverState: IServerState,
+        protected readonly connection: IStateMessageRecipient,
+        protected readonly serverEntities: ReadonlyMap<EntityID, IServerEntity>,
         config: IServerConfig
     ) {
         this.unacknowledgedDeltaInterval =
@@ -38,7 +35,7 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
     }
 
     public update() {
-        for (const [entityId, entity] of this.serverState.entities) {
+        for (const [entityId, entity] of this.serverEntities) {
             if (
                 entity.determineVisibility?.(this.connection.clientName) ===
                 false

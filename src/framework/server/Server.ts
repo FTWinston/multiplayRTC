@@ -59,7 +59,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
         IServerToClientConnection<TClientCommand, TServerEvent>
     >();
 
-    public readonly state = new ServerState<TClientCommand, TServerEvent>();
+    public readonly state = new ServerState();
 
     private readonly clientInfo = new Map<ClientID, TClientInfo>();
 
@@ -147,7 +147,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         this.state.addClient(
             connection.clientName,
-            new ClientStateManager(connection, this.state, this.config)
+            new ClientStateManager(connection, this.state.entities, this.config)
         );
 
         this.clientInfo.set(client, this.rules.clientJoined(client));
