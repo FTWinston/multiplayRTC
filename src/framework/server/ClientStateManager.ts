@@ -1,7 +1,7 @@
 import { recordChanges } from 'megapatch/lib/recordChanges';
 import { finishRecordingRaw } from 'megapatch/lib/finishRecording';
 import { partialCopy } from './partialCopy';
-import { IServerState } from './ServerState';
+import { IServerState } from './IServerState';
 import { IServerToClientConnection } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
 import { Patch } from 'megapatch/lib/Patch';
@@ -19,7 +19,8 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
         protected readonly serverState: IServerState,
         config: IServerConfig
     ) {
-        this.unacknowledgedDeltaInterval = config.tickInterval * 1000 * maxUnacknowlegedDeltaFrames;
+        this.unacknowledgedDeltaInterval =
+            config.tickInterval * 1000 * maxUnacknowlegedDeltaFrames;
         this.lastAcknowledgedTime = -this.unacknowledgedDeltaInterval;
 
         this.allocateProxy();
@@ -54,9 +55,7 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
                     ) ?? null;
 
                 const fieldsSet =
-                    fieldsArray === null
-                        ? null
-                        : new Set(...fieldsArray);
+                    fieldsArray === null ? null : new Set(...fieldsArray);
 
                 if (fieldsSet) {
                     fieldsSet.add('type');
@@ -64,7 +63,10 @@ export class ClientStateManager<TClientCommand, TServerEvent> {
                 }
 
                 const entityCopy = partialCopy(entity, fieldsSet);
-                this.proxiedEntitiesById.set(entityId, entityCopy as ClientEntity);
+                this.proxiedEntitiesById.set(
+                    entityId,
+                    entityCopy as ClientEntity
+                );
             }
         }
     }

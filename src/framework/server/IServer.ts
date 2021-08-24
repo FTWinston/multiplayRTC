@@ -1,4 +1,4 @@
-import { IServerState } from './ServerState';
+import { IServerState } from './IServerState';
 
 export type ClientID = string;
 

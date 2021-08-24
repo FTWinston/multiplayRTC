@@ -2,18 +2,7 @@ import { ClientID } from './IServer';
 import { IServerEntity } from './IServerEntity';
 import { ClientStateManager } from './ClientStateManager';
 import { EntityID } from '../shared/entityTypes';
-
-export interface IServerState {
-    readonly entities: ReadonlyMap<EntityID, IServerEntity>;
-
-    addEntity(entity: IServerEntity): EntityID;
-
-    deleteEntity(id: EntityID): void;
-
-    recalculateEntity(entityId: EntityID): void;
-
-    recalculateClient(clientId: ClientID): void;
-}
+import { IServerState } from './IServerState';
 
 export class ServerState<TClientCommand, TServerEvent> implements IServerState {
     private readonly entitiesById = new Map<EntityID, IServerEntity>();
