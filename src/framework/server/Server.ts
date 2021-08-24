@@ -3,7 +3,7 @@ import {
     ServerToClientMessage,
     ServerToClientMessageType,
 } from '../shared/ServerToClientMessage';
-import { ClientID, IServerState, ServerState } from './ServerState';
+import { ServerState } from './ServerState';
 import {
     IServerToClientConnection,
     IServerToClientConnectionProvider,
@@ -15,20 +15,7 @@ import {
 } from '../shared/ClientToServerMessage';
 import { ClientStateManager } from './ClientStateManager';
 import { IServerConfig } from './IServerConfig';
-
-export interface IServer<TClientInfo, TServerEvent> {
-    readonly clients: ReadonlyMap<ClientID, TClientInfo>;
-
-    readonly state: IServerState;
-
-    sendEvent(client: ClientID | null, event: TServerEvent): void;
-
-    pause(): void;
-
-    resume(): void;
-
-    stop(message?: string): void;
-}
+import { ClientID, IServer } from './IServer';
 
 export class Server<TClientInfo, TClientCommand, TServerEvent>
     implements IServer<TClientInfo, TServerEvent>

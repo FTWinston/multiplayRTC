@@ -2,8 +2,8 @@ import * as React from 'react';
 import { ConnectionSelector, TypedConnection } from './ConnectionSelector';
 import { TestServerEvent } from '../../shared/TestServerEvent';
 import { useState } from 'react';
-import type { ClientState } from '../../../framework/server/ClientStateManager';
 import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
+import { ClientState } from '../../../framework/shared/entityTypes';
 
 export const Client: React.FC = () => {
     const [connection, setConnection] = useState<TypedConnection>();

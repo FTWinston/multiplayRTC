@@ -1,15 +1,12 @@
 import { recordChanges } from 'megapatch/lib/recordChanges';
 import { finishRecordingRaw } from 'megapatch/lib/finishRecording';
 import { partialCopy } from './partialCopy';
-import { EntityID, IServerState } from './ServerState';
+import { IServerState } from './ServerState';
 import { IServerToClientConnection } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
 import { Patch } from 'megapatch/lib/Patch';
 import { IServerConfig } from './IServerConfig';
-
-export type ClientEntity = Record<string, any> & { type: string };
-
-export type ClientState = Map<EntityID, ClientEntity>;
+import { ClientEntity, EntityID, ClientState } from '../shared/entityTypes';
 
 const maxUnacknowlegedDeltaFrames = 8;
 

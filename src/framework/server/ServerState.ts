@@ -1,8 +1,7 @@
+import { ClientID } from './IServer';
 import { IServerEntity } from './IServerEntity';
 import { ClientStateManager } from './ClientStateManager';
-
-export type EntityID = number;
-export type ClientID = string;
+import { EntityID } from '../shared/entityTypes';
 
 export interface IServerState {
     readonly entities: ReadonlyMap<EntityID, IServerEntity>;

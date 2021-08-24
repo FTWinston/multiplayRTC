@@ -1,9 +1,9 @@
 import { IServerRulesEntity } from '../../framework/server/IServerEntity';
-import { IServer } from '../../framework/server/Server';
+import { ClientID, IServer } from '../../framework/server/IServer';
 import { TestClientCommand } from '../shared/TestClientCommand';
 import { TestServerEvent } from '../shared/TestServerEvent';
-import type { ClientID, EntityID } from '../../framework/server/ServerState';
 import { Player } from './Player';
+import { EntityID } from '../../framework/shared/entityTypes';
 
 export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCommand, TestServerEvent> {
     public readonly type = 'rules';

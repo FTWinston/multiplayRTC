@@ -1,5 +1,5 @@
 import { Patch } from 'megapatch/lib/Patch';
-import type { ClientState } from '../server/ClientStateManager';
+import { ClientState } from './entityTypes';
 
 export enum ServerToClientMessageType {
     FullState = 's',

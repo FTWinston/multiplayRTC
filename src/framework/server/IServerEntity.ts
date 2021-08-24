@@ -1,6 +1,4 @@
-import { IServer } from './Server';
-
-type ClientID = string;
+import { ClientID, IServer } from './IServer';
 
 export interface IEntity {
     readonly type: string;

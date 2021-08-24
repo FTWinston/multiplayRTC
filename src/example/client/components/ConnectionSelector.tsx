@@ -4,9 +4,9 @@ import { RemoteServerConnection } from '../../../framework/client/RemoteServerCo
 import { TestClientCommand } from '../../shared/TestClientCommand';
 import { TestServerEvent } from '../../shared/TestServerEvent';
 import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
-import type { ClientState } from '../../../framework/server/ClientStateManager';
 import { defaultSignalSettings } from '../../../framework/shared/SignalConnection';
 import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
+import { ClientState } from '../../../framework/shared/entityTypes';
 
 export type TypedConnection = ServerConnection<
     TestClientCommand,
