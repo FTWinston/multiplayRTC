@@ -1,6 +1,6 @@
 import { recordChanges } from 'megapatch/lib/recordChanges';
 import { finishRecordingRaw } from 'megapatch/lib/finishRecording';
-import { partialCopy } from './partialCopy';
+import { partialCopy, partialCopyAll } from './partialCopy';
 import { IServerEntity } from './IServerEntity';
 import { IStateMessageRecipient } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
@@ -51,15 +51,19 @@ export class ClientStateManager {
                         this.connection.clientName
                     ) ?? null;
 
+                let entityCopy: Partial<IServerEntity>;
+
                 const fieldsSet =
                     fieldsArray === null ? null : new Set(fieldsArray);
 
                 if (fieldsSet) {
                     fieldsSet.add('type');
                     this.fieldsById.set(entityId, fieldsSet);
+                    entityCopy = partialCopy(entity, fieldsSet);
+                } else {
+                    entityCopy = partialCopyAll(entity);
                 }
 
-                const entityCopy = partialCopy(entity, fieldsSet);
                 this.proxiedEntitiesById.set(
                     entityId,
                     entityCopy as ClientEntity
