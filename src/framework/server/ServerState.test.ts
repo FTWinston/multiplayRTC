@@ -316,7 +316,7 @@ test('nested changes affect client full state', () => {
     );
 });
 
-test.only('changes affect client delta state', () => {
+test('changes affect client delta state', () => {
     const clientID = '123';
 
     const clientSendFunction = jest.fn(
@@ -450,7 +450,7 @@ test.only('changes affect client delta state', () => {
 
     // An ack was received, so subsequent send will only send third state.
     clientStateManager.receiveAcknowledge(secondSendTime);
-    
+
     const fourthSendTime = 4;
     clientStateManager.sendState(fourthSendTime);
     expect(clientSendFunction.mock.calls.length).toBe(4);
@@ -466,22 +466,19 @@ test.only('changes affect client delta state', () => {
                     },
                 },
             },
-            {}
         ],
         fourthSendTime,
     ]);
 
     // An ack was received, so subsequent send will have no changes
     clientStateManager.receiveAcknowledge(fourthSendTime);
-    
+
     const fifthSendTime = 5;
     clientStateManager.sendState(fifthSendTime);
     expect(clientSendFunction.mock.calls.length).toBe(5);
     expect(clientSendFunction.mock.calls[4][0]).toEqual([
         ServerToClientMessageType.DeltaState,
-        [
-            {},
-        ],
+        [],
         fifthSendTime,
     ]);
 

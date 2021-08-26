@@ -28,7 +28,7 @@ export class ClientStateManager {
 
     private lastAcknowledgedTime: number;
 
-    private readonly unacknowledgedDeltas = new Map<number, Patch[]>();
+    private readonly unacknowledgedDeltas = new Map<number, Patch>();
 
     private allocateProxy() {
         this.proxiedEntitiesById = recordChanges(this.entitiesById);
@@ -142,7 +142,7 @@ export class ClientStateManager {
             this.sendFullState(this.entitiesById, time);
             this.forceSendFullState = false;
         } else {
-            this.sendDeltaState([patchChange ?? {}], time);
+            this.sendDeltaState(patchChange, time);
         }
     }
 
@@ -157,8 +157,10 @@ export class ClientStateManager {
         ]);
     }
 
-    protected sendDeltaState(updates: Patch[], time: number) {
-        this.unacknowledgedDeltas.set(time, updates);
+    protected sendDeltaState(update: Patch | null, time: number) {
+        if (update !== null) {
+            this.unacknowledgedDeltas.set(time, update);
+        }
 
         const cumulativeDelta = this.combineUnacknowledgedDeltas(); // TODO: could we cache this?
 
@@ -183,7 +185,7 @@ export class ClientStateManager {
         let cumulativeDelta: Patch[] = [];
 
         for (const [, delta] of this.unacknowledgedDeltas) {
-            cumulativeDelta = [...cumulativeDelta, ...delta];
+            cumulativeDelta = [...cumulativeDelta, delta];
         }
 
         return cumulativeDelta;
