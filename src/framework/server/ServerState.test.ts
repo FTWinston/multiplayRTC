@@ -4,7 +4,6 @@ import {
 } from '../shared/ServerToClientMessage';
 import { ClientStateManager } from './ClientStateManager';
 import { IServerEntity } from './IServerEntity';
-import { IStateMessageRecipient } from './IServerToClientConnection';
 import { ServerState } from './ServerState';
 
 test('basic client state mirroring', () => {
@@ -317,6 +316,197 @@ test('nested changes affect client full state', () => {
     );
 });
 
+test.only('changes affect client delta state', () => {
+    const clientID = '123';
+
+    const clientSendFunction = jest.fn(
+        (message: ServerToClientStateMessage) => {}
+    );
+
+    const serverState = new ServerState();
+    const clientStateManager = new ClientStateManager(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        serverState.entities,
+        {
+            rtcConfig: {},
+            tickInterval: 1,
+        }
+    );
+
+    const entity1id = serverState.addEntity({
+        type: 'test',
+        name: 'something',
+        score: 5,
+        determineFieldsToSend: () => ['name', 'score'],
+    } as IServerEntity);
+
+    const entity2id = serverState.addEntity({
+        type: 'test',
+        name: 'something else',
+        score: 0,
+        determineFieldsToSend: () => ['name', 'score'],
+    } as IServerEntity);
+
+    serverState.addClient(clientID, clientStateManager);
+
+    const entity1 = serverState.getEntity(entity1id);
+    const entity2 = serverState.getEntity(entity2id);
+
+    (entity1 as any).name = 'updated';
+    (entity1 as any).score = 6;
+    (entity2 as any).name = 'also updated';
+    (entity2 as any).score++;
+
+    clientStateManager.update();
+
+    expect(clientSendFunction.mock.calls.length).toBe(0);
+
+    const firstSendTime = 1;
+    clientStateManager.sendState(firstSendTime);
+    expect(clientSendFunction.mock.calls.length).toBe(1);
+    expect(clientSendFunction.mock.calls[0][0]).toEqual([
+        ServerToClientMessageType.FullState,
+        new Map<number, Record<string, any>>([
+            [
+                1,
+                {
+                    type: 'test',
+                    name: 'updated',
+                    score: 6,
+                },
+            ],
+            [
+                2,
+                {
+                    type: 'test',
+                    name: 'also updated',
+                    score: 1,
+                },
+            ],
+        ]),
+        firstSendTime,
+    ]);
+
+    (entity1 as any).score = 7;
+
+    clientStateManager.update();
+
+    // An ack was received, so subsequent send will be a delta.
+    clientStateManager.receiveAcknowledge(firstSendTime);
+
+    const secondSendTime = 2;
+    clientStateManager.sendState(secondSendTime);
+    expect(clientSendFunction.mock.calls.length).toBe(2);
+    expect(clientSendFunction.mock.calls[1][0]).toEqual([
+        ServerToClientMessageType.DeltaState,
+        [
+            {
+                C: {
+                    1: {
+                        s: {
+                            score: 7,
+                        },
+                    },
+                },
+            },
+        ],
+        secondSendTime,
+    ]);
+
+    (entity2 as any).score = 5;
+
+    clientStateManager.update();
+
+    const thirdSendTime = 3;
+    clientStateManager.sendState(thirdSendTime);
+    expect(clientSendFunction.mock.calls.length).toBe(3);
+    expect(clientSendFunction.mock.calls[2][0]).toEqual([
+        ServerToClientMessageType.DeltaState,
+        [
+            {
+                C: {
+                    1: {
+                        s: {
+                            score: 7,
+                        },
+                    },
+                },
+            },
+            {
+                C: {
+                    2: {
+                        s: {
+                            score: 5,
+                        },
+                    },
+                },
+            },
+        ],
+        thirdSendTime,
+    ]);
+
+    // An ack was received, so subsequent send will only send third state.
+    clientStateManager.receiveAcknowledge(secondSendTime);
+    
+    const fourthSendTime = 4;
+    clientStateManager.sendState(fourthSendTime);
+    expect(clientSendFunction.mock.calls.length).toBe(4);
+    expect(clientSendFunction.mock.calls[3][0]).toEqual([
+        ServerToClientMessageType.DeltaState,
+        [
+            {
+                C: {
+                    2: {
+                        s: {
+                            score: 5,
+                        },
+                    },
+                },
+            },
+            {}
+        ],
+        fourthSendTime,
+    ]);
+
+    // An ack was received, so subsequent send will have no changes
+    clientStateManager.receiveAcknowledge(fourthSendTime);
+    
+    const fifthSendTime = 5;
+    clientStateManager.sendState(fifthSendTime);
+    expect(clientSendFunction.mock.calls.length).toBe(5);
+    expect(clientSendFunction.mock.calls[4][0]).toEqual([
+        ServerToClientMessageType.DeltaState,
+        [
+            {},
+        ],
+        fifthSendTime,
+    ]);
+
+    expect(clientStateManager.entities).toEqual(
+        new Map([
+            [
+                entity1id,
+                {
+                    type: 'test',
+                    name: 'updated',
+                    score: 7,
+                },
+            ],
+            [
+                entity2id,
+                {
+                    type: 'test',
+                    name: 'also updated',
+                    score: 5,
+                },
+            ],
+        ])
+    );
+});
+
 test('nested changes affect client delta state', () => {
     const clientID = '123';
 
@@ -451,6 +641,18 @@ test('nested changes affect client delta state', () => {
                         x: 1,
                         y: 2,
                         z: 3,
+                    },
+                },
+            ],
+            [
+                entity2id,
+                {
+                    type: 'test',
+                    name: 'also updated',
+                    position: {
+                        x: 5,
+                        y: 6,
+                        z: 5,
                     },
                 },
             ],

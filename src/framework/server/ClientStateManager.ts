@@ -134,11 +134,15 @@ export class ClientStateManager {
     }
 
     public sendState(time: number) {
+        // Whether sending full or delta state, we want to reset patch recording,
+        // so subsequent delta updates can start here.
+        const patchChange = this.getChanges();
+
         if (this.shouldSendFullState(time)) {
             this.sendFullState(this.entitiesById, time);
             this.forceSendFullState = false;
         } else {
-            this.sendDeltaState([this.getChanges() ?? {}], time);
+            this.sendDeltaState([patchChange ?? {}], time);
         }
     }
 
