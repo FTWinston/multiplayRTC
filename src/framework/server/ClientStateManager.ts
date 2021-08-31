@@ -4,7 +4,7 @@ import { partialCopy, partialCopyAll } from './partialCopy';
 import { IServerEntity } from './IServerEntity';
 import { IStateMessageRecipient } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
-import { Patch } from 'megapatch/lib/Patch';
+import { MapPatch } from 'megapatch/lib/Patch';
 import { IServerConfig } from './IServerConfig';
 import { ClientEntity, EntityID, ClientState } from '../shared/entityTypes';
 
@@ -28,7 +28,7 @@ export class ClientStateManager {
 
     private lastAcknowledgedTime: number;
 
-    private readonly unacknowledgedDeltas = new Map<number, Patch>();
+    private readonly unacknowledgedDeltas = new Map<number, MapPatch>();
 
     private allocateProxy() {
         this.proxiedEntitiesById = recordChanges(this.entitiesById);
@@ -157,7 +157,7 @@ export class ClientStateManager {
         ]);
     }
 
-    protected sendDeltaState(update: Patch | null, time: number) {
+    protected sendDeltaState(update: MapPatch | null, time: number) {
         if (update !== null) {
             this.unacknowledgedDeltas.set(time, update);
         }
@@ -182,7 +182,7 @@ export class ClientStateManager {
     }
 
     private combineUnacknowledgedDeltas() {
-        let cumulativeDelta: Patch[] = [];
+        let cumulativeDelta: MapPatch[] = [];
 
         for (const [, delta] of this.unacknowledgedDeltas) {
             cumulativeDelta = [...cumulativeDelta, delta];

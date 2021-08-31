@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "enhancejson": "^1.0.1",
-    "megapatch": "^0.5.0",
+    "megapatch": "^0.6.0",
     "worker-webrtc": "git+https://github.com/johanholmerin/worker-webrtc.git"
   },
   "repository": {
