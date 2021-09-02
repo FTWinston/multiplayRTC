@@ -1,10 +1,9 @@
-import { recordChanges } from 'megapatch/lib/recordChanges';
-import { finishRecordingRaw } from 'megapatch/lib/finishRecording';
+import { MapPatch, ObjectPatch } from 'megapatch/lib/Patch';
+import { filterPatch } from 'megapatch/lib/filterPatch';
 import { partialCopy, partialCopyAll } from './partialCopy';
 import { IServerEntity } from './IServerEntity';
 import { IStateMessageRecipient } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
-import { MapPatch } from 'megapatch/lib/Patch';
 import { IServerConfig } from './IServerConfig';
 import { ClientEntity, EntityID, ClientState } from '../shared/entityTypes';
 
@@ -19,10 +18,12 @@ export class ClientStateManager {
         this.unacknowledgedDeltaInterval =
             config.tickInterval * 1000 * maxUnacknowlegedDeltaFrames;
         this.lastAcknowledgedTime = -this.unacknowledgedDeltaInterval;
-
-        this.allocateProxy();
-        this.update();
     }
+
+    private readonly knownEntityFields = new Map<
+        EntityID,
+        Set<string> | null
+    >();
 
     private readonly unacknowledgedDeltaInterval: number;
 
@@ -30,98 +31,156 @@ export class ClientStateManager {
 
     private readonly unacknowledgedDeltas = new Map<number, MapPatch>();
 
-    private allocateProxy() {
-        this.proxiedEntitiesById = recordChanges(this.entitiesById);
+    private getFieldsToSend(entity?: IServerEntity) {
+        const fieldsArray = entity?.determineFieldsToSend?.(
+            this.connection.clientName
+        );
+
+        if (fieldsArray === null) {
+            return null;
+        }
+
+        const fieldsSet = new Set(fieldsArray);
+
+        fieldsSet.add('type');
+
+        return fieldsSet;
     }
 
-    public update() {
-        for (const [entityId, entity] of this.serverEntities) {
+    private filterPatch(serverStatePatch: MapPatch): MapPatch {
+        // Filter down to only entities the client should know,
+        // and filter out any fields that they shouldn't know.
+
+        // More specific type than just MapPatch here, cos we know some things are defined.
+        const clientStatePatch: {
+            s: Array<[number, any]>;
+            d: Array<string | number>;
+            C?: Record<number, ObjectPatch>;
+        } = { s: [], d: [] };
+
+        // Now filter each entity to the relevant fields.
+        if (serverStatePatch.C) {
+            clientStatePatch.C = {};
+            for (const [strId, serverChildPatch] of Object.entries(
+                serverStatePatch.C
+            )) {
+                const entityId = parseFloat(strId);
+                const serverEntity = this.serverEntities.get(entityId);
+
+                if (
+                    serverEntity?.determineVisibility?.(
+                        this.connection.clientName
+                    )
+                ) {
+                    let entityFields = this.knownEntityFields.get(entityId);
+
+                    if (entityFields === undefined) {
+                        // Newly visible entity, set it for the first time
+                        entityFields = this.getFieldsToSend(serverEntity);
+
+                        this.knownEntityFields.set(entityId, entityFields);
+
+                        const clientEntity =
+                            entityFields === null
+                                ? partialCopyAll(serverEntity)
+                                : partialCopy(serverEntity, entityFields);
+
+                        clientStatePatch.s.push([entityId, clientEntity]);
+                    } else {
+                        // Was and still is visible
+                        const childPatch =
+                            entityFields === null
+                                ? (serverChildPatch as ObjectPatch)
+                                : filterPatch(
+                                      serverChildPatch as ObjectPatch,
+                                      entityFields
+                                  );
+
+                        clientStatePatch.C[entityId] = childPatch;
+                    }
+                } else if (this.knownEntityFields.delete(entityId)) {
+                    // Formerly-visible entity, now hidden.
+                    clientStatePatch.d.push(entityId);
+                }
+            }
+        }
+
+        if (serverStatePatch.s) {
+            for (let i = 0; i < serverStatePatch.s.length; i++) {
+                const [entityId, serverChildPatch] = serverStatePatch.s[i];
+                const serverEntity = this.serverEntities.get(
+                    entityId as number
+                );
+
+                const entityFields = this.getFieldsToSend(serverEntity);
+
+                this.knownEntityFields.set(entityId as number, entityFields);
+
+                const childPatch =
+                    entityFields === null
+                        ? (serverChildPatch as ObjectPatch)
+                        : filterPatch(
+                              serverChildPatch as ObjectPatch,
+                              entityFields
+                          );
+
+                clientStatePatch.s.push([entityId as number, childPatch]);
+            }
+        }
+
+        if (serverStatePatch.d && serverStatePatch.d !== true) {
+            for (const entityId of serverStatePatch.d) {
+                if (this.knownEntityFields.delete(entityId as number)) {
+                    clientStatePatch.d.push(entityId);
+                }
+            }
+        }
+
+        if (clientStatePatch.s.length === 0) {
+            delete (clientStatePatch as MapPatch).s;
+        }
+
+        if (clientStatePatch.d!.length === 0) {
+            delete (clientStatePatch as MapPatch).d;
+        }
+
+        return clientStatePatch;
+    }
+
+    private filterState(serverEntities: ReadonlyMap<EntityID, IServerEntity>) {
+        this.knownEntityFields.clear();
+
+        const clientEntities = new Map<EntityID, ClientEntity>();
+
+        for (const [entityId, serverEntity] of serverEntities) {
             if (
-                entity.determineVisibility?.(this.connection.clientName) ===
-                false
+                serverEntity.determineVisibility?.(
+                    this.connection.clientName
+                ) === false
             ) {
-                this.deleteEntity(entityId);
                 continue;
             }
 
-            if (!this.entitiesById.has(entityId)) {
-                // If determineFieldsToSet isn't defined, or returns null, always send all fields.
-                const fieldsArray =
-                    entity.determineFieldsToSend?.(
-                        this.connection.clientName
-                    ) ?? null;
+            const entityFields = this.getFieldsToSend(serverEntity);
+            this.knownEntityFields.set(entityId, entityFields);
 
-                let entityCopy: Partial<IServerEntity>;
+            const clientEntity =
+                entityFields === null
+                    ? partialCopyAll(serverEntity)
+                    : partialCopy(serverEntity, entityFields);
 
-                const fieldsSet =
-                    fieldsArray === null ? null : new Set(fieldsArray);
-
-                if (fieldsSet) {
-                    fieldsSet.add('type');
-                    this.fieldsById.set(entityId, fieldsSet);
-                    entityCopy = partialCopy(entity, fieldsSet);
-                } else {
-                    entityCopy = partialCopyAll(entity);
-                }
-
-                this.proxiedEntitiesById.set(
-                    entityId,
-                    entityCopy as ClientEntity
-                );
-            }
-        }
-    }
-
-    public trySetEntityValue(
-        entityId: EntityID,
-        property: PropertyKey,
-        value: any
-    ) {
-        const entity = this.proxiedEntitiesById.get(entityId);
-
-        if (!entity) {
-            return;
+            clientEntities.set(entityId, clientEntity as ClientEntity);
         }
 
-        // If a limited set of fields was specified, only continue if this is one of them.
-        const fields = this.fieldsById.get(entityId);
-        if (fields && !fields.has(property)) {
-            return;
-        }
-
-        if (value === undefined) {
-            Reflect.deleteProperty(entity, property);
-        } else {
-            Reflect.set(entity, property, value);
-        }
+        return clientEntities;
     }
 
-    public deleteEntity(entityID: EntityID) {
-        this.fieldsById.delete(entityID);
-        this.entitiesById.delete(entityID);
-        this.proxiedEntitiesById.delete(entityID);
+    public forceFullUpdate() {
+        this.forceSendFullState = true;
     }
 
-    public deleteAllEntities() {
-        this.fieldsById.clear();
-        this.entitiesById.clear();
-        this.proxiedEntitiesById.clear();
-    }
-
-    protected readonly entitiesById = new Map<EntityID, ClientEntity>();
-    private proxiedEntitiesById: Map<EntityID, ClientEntity>;
-    private readonly fieldsById = new Map<EntityID, Set<PropertyKey>>();
-
-    public get entities(): ReadonlyMap<EntityID, ClientEntity> {
-        return this.entitiesById;
-    }
-
-    private getChanges() {
-        const patch = finishRecordingRaw(this.proxiedEntitiesById);
-
-        this.allocateProxy();
-
-        return patch;
+    public forgetEntity(entityID: EntityID) {
+        this.knownEntityFields.delete(entityID);
     }
 
     private forceSendFullState = true;
@@ -133,16 +192,19 @@ export class ClientStateManager {
         );
     }
 
-    public sendState(time: number) {
-        // Whether sending full or delta state, we want to reset patch recording,
-        // so subsequent delta updates can start here.
-        const patchChange = this.getChanges();
-
-        if (this.shouldSendFullState(time)) {
-            this.sendFullState(this.entitiesById, time);
+    public update(tickId: number, serverStatePatch: MapPatch | null) {
+        if (this.shouldSendFullState(tickId)) {
             this.forceSendFullState = false;
+            const fullState = this.filterState(this.serverEntities);
+
+            this.sendFullState(fullState, tickId);
         } else {
-            this.sendDeltaState(patchChange, time);
+            const patchChange =
+                serverStatePatch === null
+                    ? null
+                    : this.filterPatch(serverStatePatch);
+
+            this.sendDeltaState(patchChange, tickId);
         }
     }
 

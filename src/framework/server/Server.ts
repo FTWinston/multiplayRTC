@@ -13,7 +13,6 @@ import {
     ClientToServerMessage,
     ClientToServerMessageType,
 } from '../shared/ClientToServerMessage';
-import { ClientStateManager } from './ClientStateManager';
 import { IServerConfig } from './IServerConfig';
 import { ClientID, IServer } from './IServer';
 
@@ -145,10 +144,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         this.clientConnections.set(client, connection);
 
-        this.state.addClient(
-            connection.clientName,
-            new ClientStateManager(connection, this.state.entities, this.config)
-        );
+        this.state.addClient(connection, this.config);
 
         this.clientInfo.set(client, this.rules.clientJoined(client));
 
@@ -232,18 +228,11 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
     private tick() {
         const tickStart = performance.now();
+        const tickId = Math.round(tickStart);
         const tickDuration = (tickStart - this.lastTickTime) / 1000;
         this.lastTickTime = tickStart;
 
-        for (const [_, entity] of this.state.entities) {
-            entity.update?.(tickDuration);
-        }
-
-        const sendTime = Math.round(tickStart);
-        for (const [_, stateManager] of this.state.clients) {
-            stateManager.update();
-            stateManager.sendState(sendTime);
-        }
+        this.state.update(tickDuration, tickId);
     }
 
     public pause() {
