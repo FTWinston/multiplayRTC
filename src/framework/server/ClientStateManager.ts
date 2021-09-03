@@ -1,6 +1,6 @@
 import { MapPatch, ObjectPatch, Patch } from 'megapatch/lib/Patch';
 import { filterPatch } from 'megapatch/lib/filterPatch';
-import { partialCopy, partialCopyAll } from './partialCopy';
+import { partialCopy } from './partialCopy';
 import { IServerEntity } from './IServerEntity';
 import { IStateMessageRecipient } from './IServerToClientConnection';
 import { ServerToClientMessageType } from '../shared/ServerToClientMessage';
@@ -39,7 +39,7 @@ export class ClientStateManager {
             this.connection.clientName
         );
 
-        if (fieldArray === null) {
+        if (!fieldArray) {
             this.knownEntityFields.set(entityId as number, null);
             return null;
         }
@@ -89,10 +89,10 @@ export class ClientStateManager {
                             serverEntity
                         );
 
-                        const clientEntity = this.filterServerEntity(
+                        const clientEntity = partialCopy(
                             serverEntity,
                             entityFields
-                        );
+                        ) as ClientEntity;
 
                         clientStatePatch.s.push([entityId, clientEntity]);
                     } else {
@@ -174,10 +174,10 @@ export class ClientStateManager {
                     serverEntity
                 );
 
-                const clientEntity = this.filterServerEntity(
+                const clientEntity = partialCopy(
                     serverEntity,
                     entityFields
-                );
+                ) as ClientEntity;
 
                 clientStatePatch.s.push([entityId, clientEntity]);
             }
@@ -187,7 +187,7 @@ export class ClientStateManager {
             delete (clientStatePatch as MapPatch).s;
         }
 
-        if (clientStatePatch.d!.length === 0) {
+        if (clientStatePatch.d.length === 0) {
             delete (clientStatePatch as MapPatch).d;
         }
 
@@ -221,28 +221,16 @@ export class ClientStateManager {
                     serverEntity
                 );
 
-                const clientEntity = this.filterServerEntity(
+                const clientEntity = partialCopy(
                     serverEntity,
                     entityFields
-                );
+                ) as ClientEntity;
 
                 clientEntities.set(entityId, clientEntity);
             }
         }
 
         return clientEntities;
-    }
-
-    private filterServerEntity(
-        serverEntity: IServerEntity,
-        entityFields: Set<string> | null
-    ) {
-        const result =
-            entityFields === null
-                ? partialCopyAll(serverEntity)
-                : partialCopy(serverEntity, entityFields);
-
-        return result as ClientEntity;
     }
 
     public forceFullUpdate() {

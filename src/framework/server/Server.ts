@@ -15,6 +15,7 @@ import {
 } from '../shared/ClientToServerMessage';
 import { IServerConfig } from './IServerConfig';
 import { ClientID, IServer } from './IServer';
+import { IServerState } from './IServerState';
 
 export class Server<TClientInfo, TClientCommand, TServerEvent>
     implements IServer<TClientInfo, TServerEvent>
@@ -27,7 +28,10 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
             TServerEvent
         >[]
     ) {
+        this.state = new ServerState();
+
         const rulesID = this.state.addEntity(rules);
+
         this.rules = this.state.getEntity(rulesID) as IServerRulesEntity<
             TClientInfo,
             TClientCommand,
@@ -58,7 +62,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
         IServerToClientConnection<TClientCommand, TServerEvent>
     >();
 
-    public readonly state = new ServerState();
+    public readonly state: IServerState;
 
     private readonly clientInfo = new Map<ClientID, TClientInfo>();
 
@@ -177,7 +181,7 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
         switch (message[0]) {
             case ClientToServerMessageType.Acknowledge: {
                 const time = message[1];
-                this.state.clients.get(client)?.receiveAcknowledge(time);
+                this.state.receiveAcknowledge(client, time);
                 return true;
             }
 

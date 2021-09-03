@@ -122,4 +122,8 @@ export class ServerState implements IServerState {
     public deleteClient(clientId: ClientID) {
         return this.clientStates.delete(clientId);
     }
+
+    public receiveAcknowledge(clientId: ClientID, tickId: number) {
+        this.clients.get(clientId)?.receiveAcknowledge(tickId);
+    }
 }

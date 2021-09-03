@@ -2,24 +2,23 @@ import {
     ServerToClientMessageType,
     ServerToClientStateMessage,
 } from '../shared/ServerToClientMessage';
-import { ClientStateManager } from './ClientStateManager';
+import { IServerConfig } from './IServerConfig';
 import { IServerEntity } from './IServerEntity';
 import { ServerState } from './ServerState';
 
+const fakeServerConfig: IServerConfig = {
+    rtcConfig: {},
+    tickInterval: 1,
+};
+
 test('basic client state mirroring', () => {
     const clientID = '123';
-    const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: () => {},
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
+
+    const clientSendFunction = jest.fn(
+        (message: ServerToClientStateMessage) => {}
     );
+
+    const serverState = new ServerState();
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -27,7 +26,13 @@ test('basic client state mirroring', () => {
         field2: 2,
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
     const entity2id = serverState.addEntity({
         type: 'test',
@@ -39,10 +44,13 @@ test('basic client state mirroring', () => {
 
     (entity1 as any).field1 = 'updated';
 
-    clientStateManager.update();
+    const firstSendTime = 1;
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
 
-    expect(clientStateManager.entities).toEqual(
-        new Map([
+    expect(clientSendFunction.mock.calls.length).toBe(1);
+    expect(clientSendFunction.mock.calls[0][0]).toEqual([
+        ServerToClientMessageType.FullState,
+        new Map<number, Record<string, any>>([
             [
                 entity1id,
                 {
@@ -59,24 +67,19 @@ test('basic client state mirroring', () => {
                     field2: 4,
                 },
             ],
-        ])
-    );
+        ]),
+        firstSendTime,
+    ]);
 });
 
 test('determineVisibility affects client state', () => {
     const clientID = '123';
-    const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: () => {},
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
+
+    const clientSendFunction = jest.fn(
+        (message: ServerToClientStateMessage) => {}
     );
+
+    const serverState = new ServerState();
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -96,7 +99,13 @@ test('determineVisibility affects client state', () => {
         },
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
     const entity1 = serverState.getEntity(entity1id);
     const entity2 = serverState.getEntity(entity1id);
@@ -104,10 +113,13 @@ test('determineVisibility affects client state', () => {
     (entity1 as any).field1 = 'updated';
     (entity2 as any).field1 = 'updated';
 
-    clientStateManager.update();
+    const firstSendTime = 1;
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
 
-    expect(clientStateManager.entities).toEqual(
-        new Map([
+    expect(clientSendFunction.mock.calls.length).toBe(1);
+    expect(clientSendFunction.mock.calls[0][0]).toEqual([
+        ServerToClientMessageType.FullState,
+        new Map<number, Record<string, any>>([
             [
                 entity1id,
                 {
@@ -116,24 +128,19 @@ test('determineVisibility affects client state', () => {
                     field2: 2,
                 },
             ],
-        ])
-    );
+        ]),
+        firstSendTime,
+    ]);
 });
 
 test("null determineFieldsToSend doesn't affect client state", () => {
     const clientID = '123';
-    const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: () => {},
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
+
+    const clientSendFunction = jest.fn(
+        (message: ServerToClientStateMessage) => {}
     );
+
+    const serverState = new ServerState();
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -142,16 +149,25 @@ test("null determineFieldsToSend doesn't affect client state", () => {
         determineFieldsToSend: (client: string) => null,
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
     const entity1 = serverState.getEntity(entity1id);
 
     (entity1 as any).field1 = 'updated';
 
-    clientStateManager.update();
+    const firstSendTime = 1;
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
 
-    expect(clientStateManager.entities).toEqual(
-        new Map([
+    expect(clientSendFunction.mock.calls.length).toBe(1);
+    expect(clientSendFunction.mock.calls[0][0]).toEqual([
+        ServerToClientMessageType.FullState,
+        new Map<number, Record<string, any>>([
             [
                 entity1id,
                 {
@@ -160,24 +176,19 @@ test("null determineFieldsToSend doesn't affect client state", () => {
                     field2: 2,
                 },
             ],
-        ])
-    );
+        ]),
+        firstSendTime,
+    ]);
 });
 
 test('determineFieldsToSend affects client state', () => {
     const clientID = '123';
-    const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: () => {},
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
+
+    const clientSendFunction = jest.fn(
+        (message: ServerToClientStateMessage) => {}
     );
+
+    const serverState = new ServerState();
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -186,17 +197,26 @@ test('determineFieldsToSend affects client state', () => {
         determineFieldsToSend: () => ['field1'],
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
     const entity1 = serverState.getEntity(entity1id);
 
     (entity1 as any).field1 = 'updated';
     (entity1 as any).field2 = 3;
 
-    clientStateManager.update();
+    const firstSendTime = 1;
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
 
-    expect(clientStateManager.entities).toEqual(
-        new Map([
+    expect(clientSendFunction.mock.calls.length).toBe(1);
+    expect(clientSendFunction.mock.calls[0][0]).toEqual([
+        ServerToClientMessageType.FullState,
+        new Map<number, Record<string, any>>([
             [
                 entity1id,
                 {
@@ -204,8 +224,9 @@ test('determineFieldsToSend affects client state', () => {
                     field1: 'updated',
                 },
             ],
-        ])
-    );
+        ]),
+        firstSendTime,
+    ]);
 });
 
 test('nested changes affect client full state', () => {
@@ -216,17 +237,6 @@ test('nested changes affect client full state', () => {
     );
 
     const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: clientSendFunction,
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
-    );
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -239,25 +249,30 @@ test('nested changes affect client full state', () => {
         determineFieldsToSend: () => ['name', 'position'],
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
     const entity1 = serverState.getEntity(entity1id);
 
     (entity1 as any).name = 'updated';
     (entity1 as any).position.y = 2;
 
-    clientStateManager.update();
-
     expect(clientSendFunction.mock.calls.length).toBe(0);
 
     const firstSendTime = 1;
-    clientStateManager.sendState(firstSendTime);
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(1);
     expect(clientSendFunction.mock.calls[0][0]).toEqual([
         ServerToClientMessageType.FullState,
         new Map<number, Record<string, any>>([
             [
-                1,
+                entity1id,
                 {
                     type: 'test',
                     name: 'updated',
@@ -274,16 +289,15 @@ test('nested changes affect client full state', () => {
 
     (entity1 as any).position.z = 3;
 
-    clientStateManager.update();
-
     const secondSendTime = 2;
-    clientStateManager.sendState(secondSendTime);
+    serverState.update(fakeServerConfig.tickInterval, secondSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(2);
     expect(clientSendFunction.mock.calls[1][0]).toEqual([
         ServerToClientMessageType.FullState,
         new Map<number, Record<string, any>>([
             [
-                1,
+                entity1id,
                 {
                     type: 'test',
                     name: 'updated',
@@ -297,23 +311,6 @@ test('nested changes affect client full state', () => {
         ]),
         secondSendTime,
     ]);
-
-    expect(clientStateManager.entities).toEqual(
-        new Map([
-            [
-                entity1id,
-                {
-                    type: 'test',
-                    name: 'updated',
-                    position: {
-                        x: 1,
-                        y: 2,
-                        z: 3,
-                    },
-                },
-            ],
-        ])
-    );
 });
 
 test('changes affect client delta state', () => {
@@ -324,17 +321,6 @@ test('changes affect client delta state', () => {
     );
 
     const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: clientSendFunction,
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
-    );
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -350,28 +336,33 @@ test('changes affect client delta state', () => {
         determineFieldsToSend: () => ['name', 'score'],
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
-    const entity1 = serverState.getEntity(entity1id);
-    const entity2 = serverState.getEntity(entity2id);
+    let entity1 = serverState.getEntity(entity1id);
+    let entity2 = serverState.getEntity(entity2id);
 
     (entity1 as any).name = 'updated';
     (entity1 as any).score = 6;
     (entity2 as any).name = 'also updated';
     (entity2 as any).score++;
 
-    clientStateManager.update();
-
     expect(clientSendFunction.mock.calls.length).toBe(0);
 
     const firstSendTime = 1;
-    clientStateManager.sendState(firstSendTime);
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(1);
     expect(clientSendFunction.mock.calls[0][0]).toEqual([
         ServerToClientMessageType.FullState,
         new Map<number, Record<string, any>>([
             [
-                1,
+                entity1id,
                 {
                     type: 'test',
                     name: 'updated',
@@ -379,7 +370,7 @@ test('changes affect client delta state', () => {
                 },
             ],
             [
-                2,
+                entity2id,
                 {
                     type: 'test',
                     name: 'also updated',
@@ -390,22 +381,24 @@ test('changes affect client delta state', () => {
         firstSendTime,
     ]);
 
+    // Can't hold onto a proxied entity across updates: re-get.
+    entity1 = serverState.getEntity(entity1id);
+    entity2 = serverState.getEntity(entity2id);
     (entity1 as any).score = 7;
 
-    clientStateManager.update();
-
     // An ack was received, so subsequent send will be a delta.
-    clientStateManager.receiveAcknowledge(firstSendTime);
+    serverState.receiveAcknowledge(clientID, firstSendTime);
 
     const secondSendTime = 2;
-    clientStateManager.sendState(secondSendTime);
+    serverState.update(fakeServerConfig.tickInterval, secondSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(2);
     expect(clientSendFunction.mock.calls[1][0]).toEqual([
         ServerToClientMessageType.DeltaState,
         [
             {
                 C: {
-                    1: {
+                    [entity1id]: {
                         s: {
                             score: 7,
                         },
@@ -416,19 +409,20 @@ test('changes affect client delta state', () => {
         secondSendTime,
     ]);
 
+    entity1 = serverState.getEntity(entity1id);
+    entity2 = serverState.getEntity(entity2id);
     (entity2 as any).score = 5;
 
-    clientStateManager.update();
-
     const thirdSendTime = 3;
-    clientStateManager.sendState(thirdSendTime);
+    serverState.update(fakeServerConfig.tickInterval, thirdSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(3);
     expect(clientSendFunction.mock.calls[2][0]).toEqual([
         ServerToClientMessageType.DeltaState,
         [
             {
                 C: {
-                    1: {
+                    [entity1id]: {
                         s: {
                             score: 7,
                         },
@@ -437,7 +431,7 @@ test('changes affect client delta state', () => {
             },
             {
                 C: {
-                    2: {
+                    [entity2id]: {
                         s: {
                             score: 5,
                         },
@@ -449,17 +443,17 @@ test('changes affect client delta state', () => {
     ]);
 
     // An ack was received, so subsequent send will only send third state.
-    clientStateManager.receiveAcknowledge(secondSendTime);
+    serverState.receiveAcknowledge(clientID, secondSendTime);
 
     const fourthSendTime = 4;
-    clientStateManager.sendState(fourthSendTime);
+    serverState.update(fakeServerConfig.tickInterval, fourthSendTime);
     expect(clientSendFunction.mock.calls.length).toBe(4);
     expect(clientSendFunction.mock.calls[3][0]).toEqual([
         ServerToClientMessageType.DeltaState,
         [
             {
                 C: {
-                    2: {
+                    [entity2id]: {
                         s: {
                             score: 5,
                         },
@@ -471,37 +465,17 @@ test('changes affect client delta state', () => {
     ]);
 
     // An ack was received, so subsequent send will have no changes
-    clientStateManager.receiveAcknowledge(fourthSendTime);
+    serverState.receiveAcknowledge(clientID, fourthSendTime);
 
     const fifthSendTime = 5;
-    clientStateManager.sendState(fifthSendTime);
+    serverState.update(fakeServerConfig.tickInterval, fifthSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(5);
     expect(clientSendFunction.mock.calls[4][0]).toEqual([
         ServerToClientMessageType.DeltaState,
         [],
         fifthSendTime,
     ]);
-
-    expect(clientStateManager.entities).toEqual(
-        new Map([
-            [
-                entity1id,
-                {
-                    type: 'test',
-                    name: 'updated',
-                    score: 7,
-                },
-            ],
-            [
-                entity2id,
-                {
-                    type: 'test',
-                    name: 'also updated',
-                    score: 5,
-                },
-            ],
-        ])
-    );
 });
 
 test('nested changes affect client delta state', () => {
@@ -512,17 +486,6 @@ test('nested changes affect client delta state', () => {
     );
 
     const serverState = new ServerState();
-    const clientStateManager = new ClientStateManager(
-        {
-            clientName: clientID,
-            send: clientSendFunction,
-        },
-        serverState.entities,
-        {
-            rtcConfig: {},
-            tickInterval: 1,
-        }
-    );
 
     const entity1id = serverState.addEntity({
         type: 'test',
@@ -546,89 +509,31 @@ test('nested changes affect client delta state', () => {
         determineFieldsToSend: () => ['name', 'position'],
     } as IServerEntity);
 
-    serverState.addClient(clientID, clientStateManager);
+    serverState.addClient(
+        {
+            clientName: clientID,
+            send: clientSendFunction,
+        },
+        fakeServerConfig
+    );
 
-    const entity1 = serverState.getEntity(entity1id);
-    const entity2 = serverState.getEntity(entity2id);
+    let entity1 = serverState.getEntity(entity1id);
+    let entity2 = serverState.getEntity(entity2id);
 
     (entity1 as any).name = 'updated';
     (entity1 as any).position.y = 2;
     (entity2 as any).name = 'also updated';
     (entity2 as any).position.y = 6;
 
-    clientStateManager.update();
-
     expect(clientSendFunction.mock.calls.length).toBe(0);
 
     const firstSendTime = 1;
-    clientStateManager.sendState(firstSendTime);
+    serverState.update(fakeServerConfig.tickInterval, firstSendTime);
+
     expect(clientSendFunction.mock.calls.length).toBe(1);
     expect(clientSendFunction.mock.calls[0][0]).toEqual([
         ServerToClientMessageType.FullState,
         new Map<number, Record<string, any>>([
-            [
-                1,
-                {
-                    type: 'test',
-                    name: 'updated',
-                    position: {
-                        x: 1,
-                        y: 2,
-                        z: 1,
-                    },
-                },
-            ],
-            [
-                2,
-                {
-                    type: 'test',
-                    name: 'also updated',
-                    position: {
-                        x: 5,
-                        y: 6,
-                        z: 5,
-                    },
-                },
-            ],
-        ]),
-        firstSendTime,
-    ]);
-
-    (entity1 as any).position.z = 3;
-
-    clientStateManager.update();
-
-    // Unlike the previous test, an ack was received, so subsequent send will be a delta.
-    clientStateManager.receiveAcknowledge(firstSendTime);
-
-    const secondSendTime = 2;
-    clientStateManager.sendState(secondSendTime);
-    expect(clientSendFunction.mock.calls.length).toBe(2);
-    expect(clientSendFunction.mock.calls[1][0]).toEqual([
-        ServerToClientMessageType.DeltaState,
-        [
-            {
-                s: [
-                    [
-                        1,
-                        {
-                            // TODO: Currently this resends every entity in full.
-                            // That ain't right...
-                            position: {
-                                // TODO: Only the changed z should show here.
-                                // Not sure of exact megapatch syntax for this.
-                                z: 3,
-                            },
-                        },
-                    ],
-                ],
-            },
-        ],
-        secondSendTime,
-    ]);
-
-    expect(clientStateManager.entities).toEqual(
-        new Map([
             [
                 entity1id,
                 {
@@ -637,7 +542,7 @@ test('nested changes affect client delta state', () => {
                     position: {
                         x: 1,
                         y: 2,
-                        z: 3,
+                        z: 1,
                     },
                 },
             ],
@@ -653,6 +558,39 @@ test('nested changes affect client delta state', () => {
                     },
                 },
             ],
-        ])
-    );
+        ]),
+        firstSendTime,
+    ]);
+
+    entity1 = serverState.getEntity(entity1id);
+    entity2 = serverState.getEntity(entity2id);
+    (entity1 as any).position.z = 3;
+
+    // Unlike the previous test, an ack was received, so subsequent send will be a delta.
+    serverState.receiveAcknowledge(clientID, firstSendTime);
+
+    const secondSendTime = 2;
+
+    serverState.update(fakeServerConfig.tickInterval, secondSendTime);
+
+    expect(clientSendFunction.mock.calls.length).toBe(2);
+    expect(clientSendFunction.mock.calls[1][0]).toEqual([
+        ServerToClientMessageType.DeltaState,
+        [
+            {
+                C: {
+                    [entity1id]: {
+                        c: {
+                            position: {
+                                s: {
+                                    z: 3,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        ],
+        secondSendTime,
+    ]);
 });
