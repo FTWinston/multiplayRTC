@@ -1,4 +1,4 @@
-import { MapPatch, ObjectPatch } from 'megapatch/lib/Patch';
+import { MapPatch, ObjectPatch, Patch } from 'megapatch/lib/Patch';
 import { filterPatch } from 'megapatch/lib/filterPatch';
 import { partialCopy, partialCopyAll } from './partialCopy';
 import { IServerEntity } from './IServerEntity';
@@ -31,25 +31,31 @@ export class ClientStateManager {
 
     private readonly unacknowledgedDeltas = new Map<number, MapPatch>();
 
-    private getFieldsToSend(entity?: IServerEntity) {
-        const fieldsArray = entity?.determineFieldsToSend?.(
+    private determineFieldsToSend(
+        entityId: number | string,
+        entity?: IServerEntity
+    ) {
+        const fieldArray = entity?.determineFieldsToSend?.(
             this.connection.clientName
         );
 
-        if (fieldsArray === null) {
+        if (fieldArray === null) {
+            this.knownEntityFields.set(entityId as number, null);
             return null;
         }
 
-        const fieldsSet = new Set(fieldsArray);
+        const fieldSet = new Set(fieldArray);
 
-        fieldsSet.add('type');
+        fieldSet.add('type');
 
-        return fieldsSet;
+        this.knownEntityFields.set(entityId as number, fieldSet);
+        return fieldSet;
     }
 
-    private filterPatch(serverStatePatch: MapPatch): MapPatch {
+    private filterServerPatch(serverStatePatch: MapPatch): MapPatch {
         // Filter down to only entities the client should know,
         // and filter out any fields that they shouldn't know.
+        const modifiedKnownEntities = new Set<EntityID>();
 
         // More specific type than just MapPatch here, cos we know some things are defined.
         const clientStatePatch: {
@@ -68,33 +74,33 @@ export class ClientStateManager {
                 const serverEntity = this.serverEntities.get(entityId);
 
                 if (
-                    serverEntity?.determineVisibility?.(
+                    serverEntity &&
+                    serverEntity.determineVisibility?.(
                         this.connection.clientName
-                    )
+                    ) !== false
                 ) {
+                    modifiedKnownEntities.add(entityId);
                     let entityFields = this.knownEntityFields.get(entityId);
 
                     if (entityFields === undefined) {
                         // Newly visible entity, set it for the first time
-                        entityFields = this.getFieldsToSend(serverEntity);
+                        entityFields = this.determineFieldsToSend(
+                            entityId,
+                            serverEntity
+                        );
 
-                        this.knownEntityFields.set(entityId, entityFields);
-
-                        const clientEntity =
-                            entityFields === null
-                                ? partialCopyAll(serverEntity)
-                                : partialCopy(serverEntity, entityFields);
+                        const clientEntity = this.filterServerEntity(
+                            serverEntity,
+                            entityFields
+                        );
 
                         clientStatePatch.s.push([entityId, clientEntity]);
                     } else {
                         // Was and still is visible
-                        const childPatch =
-                            entityFields === null
-                                ? (serverChildPatch as ObjectPatch)
-                                : filterPatch(
-                                      serverChildPatch as ObjectPatch,
-                                      entityFields
-                                  );
+                        const childPatch = this.filterPatchEntity(
+                            serverChildPatch,
+                            entityFields
+                        );
 
                         clientStatePatch.C[entityId] = childPatch;
                     }
@@ -112,19 +118,26 @@ export class ClientStateManager {
                     entityId as number
                 );
 
-                const entityFields = this.getFieldsToSend(serverEntity);
+                if (
+                    serverEntity &&
+                    serverEntity.determineVisibility?.(
+                        this.connection.clientName
+                    ) !== false
+                ) {
+                    modifiedKnownEntities.add(entityId as number);
 
-                this.knownEntityFields.set(entityId as number, entityFields);
+                    const entityFields = this.determineFieldsToSend(
+                        entityId,
+                        serverEntity
+                    );
 
-                const childPatch =
-                    entityFields === null
-                        ? (serverChildPatch as ObjectPatch)
-                        : filterPatch(
-                              serverChildPatch as ObjectPatch,
-                              entityFields
-                          );
+                    const childPatch = this.filterPatchEntity(
+                        serverChildPatch,
+                        entityFields
+                    );
 
-                clientStatePatch.s.push([entityId as number, childPatch]);
+                    clientStatePatch.s.push([entityId as number, childPatch]);
+                }
             }
         }
 
@@ -133,6 +146,40 @@ export class ClientStateManager {
                 if (this.knownEntityFields.delete(entityId as number)) {
                     clientStatePatch.d.push(entityId);
                 }
+            }
+        }
+
+        // Check for any existing entity's visibility changing,
+        // despite the entity itself not having updated.
+        // (e.g. due to the client's character moving around.)
+        for (const [entityId, serverEntity] of this.serverEntities) {
+            if (this.knownEntityFields.has(entityId)) {
+                if (
+                    !modifiedKnownEntities.has(entityId) &&
+                    serverEntity.determineVisibility?.(
+                        this.connection.clientName
+                    ) === false
+                ) {
+                    // A known entity that is no longer visible.
+                    clientStatePatch.d.push(entityId);
+                }
+            } else if (
+                serverEntity.determineVisibility?.(
+                    this.connection.clientName
+                ) !== false
+            ) {
+                // An unknown entity that is now visible.
+                const entityFields = this.determineFieldsToSend(
+                    entityId,
+                    serverEntity
+                );
+
+                const clientEntity = this.filterServerEntity(
+                    serverEntity,
+                    entityFields
+                );
+
+                clientStatePatch.s.push([entityId, clientEntity]);
             }
         }
 
@@ -147,7 +194,18 @@ export class ClientStateManager {
         return clientStatePatch;
     }
 
-    private filterState(serverEntities: ReadonlyMap<EntityID, IServerEntity>) {
+    private filterPatchEntity(
+        serverChildPatch: Patch,
+        entityFields: Set<string> | null
+    ) {
+        return entityFields === null
+            ? (serverChildPatch as ObjectPatch)
+            : filterPatch(serverChildPatch as ObjectPatch, entityFields);
+    }
+
+    private filterServerState(
+        serverEntities: ReadonlyMap<EntityID, IServerEntity>
+    ) {
         this.knownEntityFields.clear();
 
         const clientEntities = new Map<EntityID, ClientEntity>();
@@ -156,23 +214,35 @@ export class ClientStateManager {
             if (
                 serverEntity.determineVisibility?.(
                     this.connection.clientName
-                ) === false
+                ) !== false
             ) {
-                continue;
+                const entityFields = this.determineFieldsToSend(
+                    entityId,
+                    serverEntity
+                );
+
+                const clientEntity = this.filterServerEntity(
+                    serverEntity,
+                    entityFields
+                );
+
+                clientEntities.set(entityId, clientEntity);
             }
-
-            const entityFields = this.getFieldsToSend(serverEntity);
-            this.knownEntityFields.set(entityId, entityFields);
-
-            const clientEntity =
-                entityFields === null
-                    ? partialCopyAll(serverEntity)
-                    : partialCopy(serverEntity, entityFields);
-
-            clientEntities.set(entityId, clientEntity as ClientEntity);
         }
 
         return clientEntities;
+    }
+
+    private filterServerEntity(
+        serverEntity: IServerEntity,
+        entityFields: Set<string> | null
+    ) {
+        const result =
+            entityFields === null
+                ? partialCopyAll(serverEntity)
+                : partialCopy(serverEntity, entityFields);
+
+        return result as ClientEntity;
     }
 
     public forceFullUpdate() {
@@ -195,14 +265,14 @@ export class ClientStateManager {
     public update(tickId: number, serverStatePatch: MapPatch | null) {
         if (this.shouldSendFullState(tickId)) {
             this.forceSendFullState = false;
-            const fullState = this.filterState(this.serverEntities);
+            const fullState = this.filterServerState(this.serverEntities);
 
             this.sendFullState(fullState, tickId);
         } else {
             const patchChange =
                 serverStatePatch === null
                     ? null
-                    : this.filterPatch(serverStatePatch);
+                    : this.filterServerPatch(serverStatePatch);
 
             this.sendDeltaState(patchChange, tickId);
         }
