@@ -2,6 +2,7 @@ import { IServerConfig } from './IServerConfig';
 import { IServerRulesEntity } from './IServerEntity';
 import { Server } from './Server';
 import { ServerSignalConnection } from './ServerSignalConnection';
+import { IConnectionConfig } from '../shared/SignalConnection';
 
 // Not to be called from in a web worker.
 export function createDedicatedServer<
@@ -10,16 +11,17 @@ export function createDedicatedServer<
     TServerEvent
 >(
     rules: IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>,
-    config: IServerConfig
+    serverConfig: IServerConfig,
+    connectionConfig: IConnectionConfig
 ) {
     const remoteConnectionProvider = new ServerSignalConnection<
         TClientCommand,
         TServerEvent
-    >(config.rtcConfig);
+    >(connectionConfig);
 
     return new Server<TClientInfo, TClientCommand, TServerEvent>(
         rules,
-        config,
+        serverConfig,
         remoteConnectionProvider
     );
 }

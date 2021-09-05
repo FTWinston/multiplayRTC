@@ -4,7 +4,7 @@ import { RemoteServerConnection } from '../../../framework/client/RemoteServerCo
 import { TestClientCommand } from '../../shared/TestClientCommand';
 import { TestServerEvent } from '../../shared/TestServerEvent';
 import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
-import { defaultSignalSettings } from '../../../framework/shared/SignalConnection';
+import { defaultConnectionConfig } from '../../../framework/shared/SignalConnection';
 import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
 import { ClientState } from '../../../framework/shared/entityTypes';
 
@@ -24,7 +24,11 @@ export const ConnectionSelector = (props: IProps) => {
     let connection: TypedConnection;
     const ready = () => props.connectionSelected(connection);
 
-    const selectLocal = () => {
+    const [sessionId, setSessionId] = useState('');
+
+    const [localName, setLocalName] = useState('');
+
+    const selectOffline = () => {
         connection = new LocalServerConnection<
             TestClientCommand,
             TestServerEvent
@@ -40,9 +44,7 @@ export const ConnectionSelector = (props: IProps) => {
         ready();
     };
 
-    const [sessionId, setSessionId] = useState('');
 
-    const [localName, setLocalName] = useState('');
 
     const selectRemote = () => {
         connection = new RemoteServerConnection<
@@ -50,7 +52,7 @@ export const ConnectionSelector = (props: IProps) => {
             TestServerEvent
         >({
             sessionId,
-            signalSettings: defaultSignalSettings,
+            connectionConfig: defaultConnectionConfig,
             clientName: localName,
             receiveEvent: (cmd) => props.receiveEvent(cmd),
             receiveCommonEvent: (cmd) => props.receiveCommonEvent(cmd),

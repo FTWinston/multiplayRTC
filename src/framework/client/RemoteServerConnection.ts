@@ -1,7 +1,7 @@
 import { ServerConnection, ConnectionParameters } from './ServerConnection';
 import { ServerToClientMessage } from '../shared/ServerToClientMessage';
 import { ClientToServerMessageType } from '../shared/ClientToServerMessage';
-import { IConnectionSettings } from '../shared/SignalConnection';
+import { IConnectionConfig } from '../shared/SignalConnection';
 import { ClientSignalConnection } from './ClientSignalConnection';
 import { stringify } from 'enhancejson/lib/stringify';
 import { parse } from 'enhancejson/lib/parse';
@@ -10,7 +10,7 @@ export interface RemoteConnectionParameters<TServerEvent>
     extends ConnectionParameters<TServerEvent> {
     sessionId: string;
     clientName: string;
-    signalSettings: IConnectionSettings;
+    connectionConfig: IConnectionConfig;
     ready: () => void;
 }
 
@@ -30,7 +30,7 @@ export class RemoteServerConnection<
         console.log(`connecting to server ${params.sessionId}...`);
 
         const signal = new ClientSignalConnection(
-            params.signalSettings,
+            params.connectionConfig,
             params.sessionId,
             params.clientName,
             (peer) => {

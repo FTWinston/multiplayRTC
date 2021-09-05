@@ -3,11 +3,13 @@ import { IServerRulesEntity } from './IServerEntity';
 import { LocalClientConnectionProvider } from './LocalClientConnection';
 import { Server } from './Server';
 import { WorkerServerSignalConnection } from './WorkerServerSignalConnection';
+import { IConnectionConfig } from '../shared/SignalConnection';
 
 // To be called from in a web worker.
 export function createListenServer<TClientInfo, TClientCommand, TServerEvent>(
     rules: IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>,
-    config: IServerConfig,
+    serverConfig: IServerConfig,
+    connectionConfig: IConnectionConfig,
     localName: string
 ) {
     const localConnectionProvider = new LocalClientConnectionProvider<
@@ -18,11 +20,11 @@ export function createListenServer<TClientInfo, TClientCommand, TServerEvent>(
     const remoteConnectionProvider = new WorkerServerSignalConnection<
         TClientCommand,
         TServerEvent
-    >(config.rtcConfig);
+    >(connectionConfig);
 
     return new Server<TClientInfo, TClientCommand, TServerEvent>(
         rules,
-        config,
+        serverConfig,
         localConnectionProvider,
         remoteConnectionProvider
     );

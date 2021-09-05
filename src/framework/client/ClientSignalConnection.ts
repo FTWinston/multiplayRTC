@@ -1,13 +1,13 @@
 import {
     SignalConnection,
-    IConnectionSettings,
+    IConnectionConfig,
 } from '../shared/SignalConnection';
 
 export class ClientSignalConnection extends SignalConnection {
     private readonly peer: RTCPeerConnection;
 
     constructor(
-        settings: IConnectionSettings,
+        settings: IConnectionConfig,
         private readonly sessionId: string,
         private readonly clientName: string,
         join: (peer: RTCPeerConnection) => void,

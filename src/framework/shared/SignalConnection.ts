@@ -15,28 +15,28 @@ interface RTCConfiguration {
     rtcpMuxPolicy?: RTCRtcpMuxPolicy;
 }
 
-export interface IConnectionSettings {
+export interface IConnectionConfig {
     signalUrl: string;
     rtcConfig: RTCConfiguration;
 }
 
 export abstract class SignalConnection {
     private socket: WebSocket;
-    protected readonly settings: IConnectionSettings;
+    protected readonly settings: IConnectionConfig;
 
     constructor(
         private readonly disconnected: () => void,
-        settings: Partial<IConnectionSettings> = {}
+        settings: Partial<IConnectionConfig> = {}
     ) {
         this.settings = {
-            ...defaultSignalSettings,
+            ...defaultConnectionConfig,
             ...settings,
             rtcConfig: settings.rtcConfig
                 ? {
-                      ...defaultSignalSettings.rtcConfig,
+                      ...defaultConnectionConfig.rtcConfig,
                       ...settings.rtcConfig,
                   }
-                : defaultSignalSettings.rtcConfig,
+                : defaultConnectionConfig.rtcConfig,
         };
     }
 
@@ -105,7 +105,7 @@ export abstract class SignalConnection {
     }
 }
 
-export const defaultSignalSettings: IConnectionSettings = {
+export const defaultConnectionConfig: IConnectionConfig = {
     signalUrl:
         process.env.NODE_ENV === 'production'
             ? 'wss://signal.ftwinston.com'

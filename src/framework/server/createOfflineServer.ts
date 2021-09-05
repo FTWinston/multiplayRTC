@@ -6,7 +6,7 @@ import { Server } from './Server';
 // To be called from in a web worker.
 export function createOfflineServer<TClientInfo, TClientCommand, TServerEvent>(
     rules: IServerRulesEntity<TClientInfo, TClientCommand, TServerEvent>,
-    config: Omit<IServerConfig, 'rtcConfig'>
+    serverConfig: IServerConfig
 ) {
     const localConnectionProvider = new LocalClientConnectionProvider<
         TClientCommand,
@@ -15,7 +15,7 @@ export function createOfflineServer<TClientInfo, TClientCommand, TServerEvent>(
 
     return new Server<TClientInfo, TClientCommand, TServerEvent>(
         rules,
-        { ...config, rtcConfig: {} },
+        serverConfig,
         localConnectionProvider
     );
 }

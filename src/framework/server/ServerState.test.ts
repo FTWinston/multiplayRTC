@@ -7,7 +7,6 @@ import { IServerEntity } from './IServerEntity';
 import { ServerState } from './ServerState';
 
 const fakeServerConfig: IServerConfig = {
-    rtcConfig: {},
     tickInterval: 1,
 };
 

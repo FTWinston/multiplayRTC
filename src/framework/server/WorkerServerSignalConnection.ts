@@ -1,4 +1,4 @@
-import { IConnectionSettings } from '../shared/SignalConnection';
+import { IConnectionConfig } from '../shared/SignalConnection';
 import { ServerSignalConnection } from './ServerSignalConnection';
 
 import { RTCPeerConnection } from 'worker-webrtc/worker';
@@ -7,7 +7,7 @@ export class WorkerServerSignalConnection<
     TClientCommand,
     TServerEvent
 > extends ServerSignalConnection<TClientCommand, TServerEvent> {
-    constructor(settings: IConnectionSettings) {
+    constructor(settings: IConnectionConfig) {
         super(settings);
     }
 

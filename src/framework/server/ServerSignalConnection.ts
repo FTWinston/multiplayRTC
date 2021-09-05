@@ -1,6 +1,6 @@
 import {
     SignalConnection,
-    IConnectionSettings,
+    IConnectionConfig,
 } from '../shared/SignalConnection';
 import {
     IServerToClientConnection,
@@ -14,7 +14,7 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
 {
     private connectingPeers: Map<string, RTCPeerConnection>;
 
-    constructor(settings: IConnectionSettings) {
+    constructor(settings: IConnectionConfig) {
         super(() => this.serverDisconnected(), settings);
 
         this.connectingPeers = new Map<string, RTCPeerConnection>();
