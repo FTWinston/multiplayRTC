@@ -44,7 +44,24 @@ export const ConnectionSelector = (props: IProps) => {
         ready();
     };
 
+    // TODO: need a way of passing clientName to the server
+    // Perhaps the name is passed as a separate 
+    const selectLocal = () => {
+        connection = new LocalServerConnection<
+            TestClientCommand,
+            TestServerEvent
+        >({
+            worker: new Worker(new URL('../../server/localWorker', import.meta.url)),
+            // clientName: localName,
+            receiveEvent: (evt) => props.receiveEvent(evt),
+            receiveCommonEvent: (evt) => props.receiveCommonEvent(evt),
+            clientStateChanged: (prevState, state) =>
+                props.stateChanged(prevState, state),
+            receiveError: (msg) => console.error(msg),
+        });
 
+        ready();
+    };
 
     const selectRemote = () => {
         connection = new RemoteServerConnection<
@@ -75,6 +92,7 @@ export const ConnectionSelector = (props: IProps) => {
             </div>
 
             <div style={{ marginTop: '2em' }}>
+                <button onClick={selectOffline}>Play offline</button>
                 <button onClick={selectLocal}>Host a local server</button>
             </div>
 
