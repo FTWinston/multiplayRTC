@@ -53,13 +53,13 @@ export class RemoteClientConnection<TClientCommand, TServerEvent>
     private setupDataChannel(channel: RTCDataChannel) {
         channel.onclose = () => this.reportDisconnected();
 
-        channel.onerror = (error) => {
+        channel.onerror = (event) => {
             this.disconnect();
-            if (error.error.code !== 0) {
-                console.error(
-                    `Error ${error.error.code} in connection to client ${this.clientName}: ${error.error.message}`
-                );
-            }
+            const error = (event as any).error;
+
+            console.error(
+                `Error in connection to client ${this.clientName}: ${error.message}`
+            );
         };
 
         channel.onmessage = (event) => {
