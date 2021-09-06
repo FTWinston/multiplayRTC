@@ -16,6 +16,7 @@ import {
 import { IServerConfig } from './IServerConfig';
 import { ClientID, IServer } from './IServer';
 import { IServerState } from './IServerState';
+import { shouldIgnoreWorkerMessage } from '../shared/shouldIgnoreWorkerMessage';
 
 export class Server<TClientInfo, TClientCommand, TServerEvent>
     implements IServer<TClientInfo, TServerEvent>
@@ -135,10 +136,12 @@ export class Server<TClientInfo, TClientCommand, TServerEvent>
 
         connection.connect((clientToServerMessage) => {
             if (!this.receiveMessage(client, clientToServerMessage)) {
-                console.log(
-                    `received unrecognised message from ${connection.clientName}`,
-                    clientToServerMessage
-                );
+                if (!shouldIgnoreWorkerMessage(clientToServerMessage)) {
+                    console.log(
+                        `received unrecognised message from ${connection.clientName}`,
+                        clientToServerMessage
+                    );
+                }
             }
         });
 

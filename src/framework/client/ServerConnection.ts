@@ -6,6 +6,7 @@ import {
     ServerToClientMessage,
     ServerToClientMessageType,
 } from '../shared/ServerToClientMessage';
+import { shouldIgnoreWorkerMessage } from '../shared/shouldIgnoreWorkerMessage';
 
 export interface ConnectionParameters<TServerEvent> {
     receiveEvent: (cmd: TServerEvent) => void;
@@ -55,10 +56,12 @@ export abstract class ServerConnection<TClientCommand, TServerEvent> {
                 this.disconnect();
                 break;
             default:
-                console.log(
-                    'received unrecognised message from server',
-                    message
-                );
+                if (!shouldIgnoreWorkerMessage(message)) {
+                    console.log(
+                        'received unrecognised message from server',
+                        message
+                    );
+                }
                 break;
         }
     }

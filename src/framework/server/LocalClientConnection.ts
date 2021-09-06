@@ -1,8 +1,5 @@
 import { ClientToServerMessage } from '../shared/ClientToServerMessage';
-import {
-    ServerToClientMessage,
-    ServerToClientMessageType,
-} from '../shared/ServerToClientMessage';
+import { ServerToClientMessage } from '../shared/ServerToClientMessage';
 import {
     IServerToClientConnection,
     IServerToClientConnectionProvider,
