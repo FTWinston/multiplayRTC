@@ -36,7 +36,7 @@
   "dependencies": {
     "enhancejson": "^1.0.1",
     "megapatch": "^0.6.1",
-    "worker-webrtc": "git+https://github.com/johanholmerin/worker-webrtc.git#hide-messages"
+    "worker-webrtc": "git+https://github.com/johanholmerin/worker-webrtc.git"
   },
   "repository": {
     "type": "git",
