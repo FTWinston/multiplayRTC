@@ -2,11 +2,13 @@
   "name": "multiplayrtc",
   "version": "1.0.0",
   "description": "A library for peer-to-peer multiplayer games using webRTC",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "sideEffects": false,
+  "main": "lib/cjs/index.js",
+  "module": "lib/es/index.js",
+  "types": "lib/cjs/index.d.ts",
   "scripts": {
     "start": "webpack-dev-server --open --config config/webpack.dev.js",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig-cjs.json",
     "tidy": "prettier ./src/framework/ --write",
     "prepare": "npm run build",
     "test": "npx jest"

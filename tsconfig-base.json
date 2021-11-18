@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "jsx": "react",
+    "allowJs": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "strictNullChecks": true
+  },
+  "include": [
+    "src/framework", "src/declarations.d.ts",
+  ]
+}
