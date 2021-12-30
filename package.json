@@ -14,7 +14,7 @@
     "test": "npx jest"
   },
   "author": "FTWinston",
-  "license": "MIT",
+  "license": "ISC",
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "@types/react": "^16.14.16",
@@ -36,7 +36,7 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
-    "enhancejson": "^1.0.1",
+    "enhancejson": "^1.2.1",
     "megapatch": "^0.6.1",
     "worker-webrtc": "git+https://github.com/johanholmerin/worker-webrtc.git"
   },
