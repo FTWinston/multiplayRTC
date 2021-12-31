@@ -1,4 +1,4 @@
-import { Patch } from 'megapatch/lib/Patch';
+import { Patch } from 'megapatch';
 import { ClientState } from './entityTypes';
 
 export enum ServerToClientMessageType {

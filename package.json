@@ -36,8 +36,8 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
-    "enhancejson": "^1.2.1",
-    "megapatch": "^0.6.1",
+    "enhancejson": "^1.2.2",
+    "megapatch": "^1.1.2",
     "worker-webrtc": "git+https://github.com/johanholmerin/worker-webrtc.git"
   },
   "repository": {

@@ -1,5 +1,5 @@
-import { applyChanges } from 'megapatch/lib/applyChanges';
-import { Patch } from 'megapatch/lib/Patch';
+import { applyChanges } from 'megapatch';
+import { Patch } from 'megapatch';
 import { ClientState, EntityID, ClientEntity } from '../shared/entityTypes';
 import {
     CommonEvent,
