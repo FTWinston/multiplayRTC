@@ -90,10 +90,11 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
         }
     }
 
-    protected createConnection(name: string, peer: RTCPeerConnection) {
+    private createConnection(name: string, peer: RTCPeerConnection) {
         return new RemoteClientConnection<TClientCommand, TServerEvent>(
             name,
             peer,
+            // TODO: handle rejection if this.clientConnectedCallback fails?
             (connection) => this.clientConnectedCallback?.(connection),
             (connection) => this.clientDisconnectedCallback?.(connection)
         );
@@ -140,11 +141,7 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
                 && peer.iceConnectionState === 'connected'
             ) {
                 this.connectingPeers.delete(name);
-
-                const clientConnection = this.createConnection(name, peer);
-                if (!this.clientConnectedCallback?.(clientConnection)) {
-                    // TODO: handle rejection
-                }
+                this.createConnection(name, peer);
             }
         };
 
