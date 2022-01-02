@@ -1,10 +1,9 @@
+import { parse, stringify } from 'enhancejson';
 import { ServerConnection, ConnectionParameters } from './ServerConnection';
 import { ServerToClientMessage } from '../shared/ServerToClientMessage';
 import { ClientToServerMessageType } from '../shared/ClientToServerMessage';
 import { IConnectionConfig } from '../shared/SignalConnection';
 import { ClientSignalConnection } from './ClientSignalConnection';
-import { stringify } from 'enhancejson';
-import { parse } from 'enhancejson';
 
 export interface RemoteConnectionParameters<TServerEvent>
     extends ConnectionParameters<TServerEvent> {

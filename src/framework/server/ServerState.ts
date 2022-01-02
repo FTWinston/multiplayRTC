@@ -1,5 +1,4 @@
-import { recordChanges } from 'megapatch';
-import { finishRecordingRaw } from 'megapatch';
+import { finishRecordingRaw, recordChanges } from 'megapatch';
 import { ClientID } from './IServer';
 import { IServerEntity } from './IServerEntity';
 import { ClientStateManager } from './ClientStateManager';

@@ -72,7 +72,7 @@ export abstract class SignalConnection {
         return new RTCPeerConnection(this.settings.rtcConfig);
     }
 
-    gatherIce(peer: RTCPeerConnection, remoteName: string) {
+    protected gatherIce(peer: RTCPeerConnection, remoteName: string) {
         peer.onicecandidate = (event) => {
             if (!event.candidate) {
                 if (process.env.NODE_ENV === 'development') {
@@ -85,8 +85,8 @@ export abstract class SignalConnection {
                 console.log('got ice candidate');
             }
 
-            // Don't bother sending ice if already connected.
-            if (this.socket.readyState === WebSocket.OPEN) {
+            // Only send ICE if (still) connected to the signal server.
+            if (this.connected) {
                 this.send([
                     'ice',
                     remoteName,

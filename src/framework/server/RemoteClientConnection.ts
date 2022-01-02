@@ -1,11 +1,10 @@
-import { stringify } from 'enhancejson';
+import { parse, stringify } from 'enhancejson';
 import { IServerToClientConnection } from './IServerToClientConnection';
 import {
     ServerToClientMessage,
     ServerToClientMessageType,
 } from '../shared/ServerToClientMessage';
 import { ClientToServerMessage } from '../shared/ClientToServerMessage';
-import { parse } from 'enhancejson';
 
 export class RemoteClientConnection<TClientCommand, TServerEvent>
     implements IServerToClientConnection<TClientCommand, TServerEvent>

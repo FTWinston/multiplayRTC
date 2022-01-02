@@ -1,5 +1,4 @@
-import { MapPatch, ObjectPatch, Patch } from 'megapatch';
-import { filterPatch } from 'megapatch';
+import { filterPatch, MapPatch, ObjectPatch, Patch } from 'megapatch';
 import { partialCopy } from './partialCopy';
 import { IServerEntity } from './IServerEntity';
 import { IStateMessageRecipient } from './IServerToClientConnection';

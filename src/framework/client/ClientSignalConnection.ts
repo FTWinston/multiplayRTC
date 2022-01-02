@@ -23,12 +23,18 @@ export class ClientSignalConnection extends SignalConnection {
         const tempChannel = this.peer.createDataChannel('temp');
         tempChannel.onopen = () => tempChannel.close();
 
+        this.peer.onsignalingstatechange =
+        this.peer.oniceconnectionstatechange =
         this.peer.onconnectionstatechange = () => {
             if (process.env.NODE_ENV === 'development') {
-                console.log(`peer state changed: ${this.peer.connectionState}`);
+                console.log(`client peer connection state changed: ${this.peer.connectionState}, ${this.peer.signalingState}, ${this.peer.iceConnectionState}`);
             }
 
-            if (this.peer.connectionState === 'connected') {
+            if (
+                this.peer.connectionState === 'connected'
+                && this.peer.signalingState === 'stable'
+                && this.peer.iceConnectionState === 'connected'
+            ) {
                 join(this.peer);
                 this.disconnect();
             }
@@ -41,7 +47,7 @@ export class ClientSignalConnection extends SignalConnection {
         const offer = await this.peer.createOffer();
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('set local description');
+            console.log('client set local description');
         }
 
         await this.peer.setLocalDescription(offer);
@@ -77,7 +83,7 @@ export class ClientSignalConnection extends SignalConnection {
 
     private async receiveAnswer(answer: string) {
         if (process.env.NODE_ENV === 'development') {
-            console.log('set remote description');
+            console.log('client received answer, set remote description');
         }
 
         await this.peer.setRemoteDescription({
@@ -88,7 +94,7 @@ export class ClientSignalConnection extends SignalConnection {
 
     private async receiveIce(candidate: RTCIceCandidateInit) {
         if (process.env.NODE_ENV === 'development') {
-            console.log('receive ice');
+            console.log('client received ice');
         }
 
         await this.peer.addIceCandidate(candidate);

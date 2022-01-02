@@ -1,7 +1,6 @@
+import { RTCPeerConnection } from 'worker-webrtc/worker';
 import { IConnectionConfig } from '../shared/SignalConnection';
 import { ServerSignalConnection } from './ServerSignalConnection';
-
-import { RTCPeerConnection } from 'worker-webrtc/worker';
 
 export class WorkerServerSignalConnection<
     TClientCommand,

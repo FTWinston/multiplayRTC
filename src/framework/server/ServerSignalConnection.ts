@@ -114,7 +114,7 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
             this.send([
                 'reject',
                 name,
-                'Name should be at 1 to 20 characters long.',
+                'Name should be 1 to 20 characters long.',
             ]);
             return;
         }
@@ -127,12 +127,18 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
 
         this.connectingPeers.set(name, peer);
 
+        peer.onsignalingstatechange = 
+        peer.oniceconnectionstatechange
         peer.onconnectionstatechange = () => {
             if (process.env.NODE_ENV === 'development') {
-                console.log(`peer state changed: ${peer.connectionState}`);
+                console.log(`server peer state changed: ${peer.connectionState}, ${peer.signalingState}, ${peer.iceConnectionState}`);
             }
 
-            if (peer.connectionState === 'connected') {
+            if (
+                this.connectingPeers.has(name)
+                && peer.signalingState === 'stable'
+                && peer.iceConnectionState === 'connected'
+            ) {
                 this.connectingPeers.delete(name);
 
                 const clientConnection = this.createConnection(name, peer);
@@ -145,7 +151,7 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
         this.gatherIce(peer, name);
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('set remote description');
+            console.log('server set remote description');
         }
 
         await peer.setRemoteDescription({
@@ -154,12 +160,12 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
         });
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('creating answer');
+            console.log('server creating answer');
         }
         const answer = await peer.createAnswer();
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('set local description');
+            console.log('server set local description');
         }
 
         await peer.setLocalDescription(answer);
@@ -168,12 +174,12 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
     }
 
     private isValidName(name: string) {
-        return name.length > 1 && name.length < 20;
+        return name.length >= 1 && name.length <= 20;
     }
 
     private async receiveIce(name: string, data: string) {
         if (process.env.NODE_ENV === 'development') {
-            console.log(`received ice from ${name}`);
+            console.log(`server received ice from ${name}`);
         }
 
         const peer = this.connectingPeers.get(name);
