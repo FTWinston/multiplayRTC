@@ -24,21 +24,24 @@ export class ClientSignalConnection extends SignalConnection {
         tempChannel.onopen = () => tempChannel.close();
 
         this.peer.onsignalingstatechange =
-        this.peer.oniceconnectionstatechange =
-        this.peer.onconnectionstatechange = () => {
-            if (process.env.NODE_ENV === 'development') {
-                console.log(`client peer connection state changed: ${this.peer.connectionState}, ${this.peer.signalingState}, ${this.peer.iceConnectionState}`);
-            }
+            this.peer.oniceconnectionstatechange =
+            this.peer.onconnectionstatechange =
+                () => {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.log(
+                            `client peer connection state changed: ${this.peer.connectionState}, ${this.peer.signalingState}, ${this.peer.iceConnectionState}`
+                        );
+                    }
 
-            if (
-                this.peer.connectionState === 'connected'
-                && this.peer.signalingState === 'stable'
-                && this.peer.iceConnectionState === 'connected'
-            ) {
-                join(this.peer);
-                this.disconnect();
-            }
-        };
+                    if (
+                        this.peer.connectionState === 'connected' &&
+                        this.peer.signalingState === 'stable' &&
+                        this.peer.iceConnectionState === 'connected'
+                    ) {
+                        join(this.peer);
+                        this.disconnect();
+                    }
+                };
     }
 
     protected async socketOpened() {

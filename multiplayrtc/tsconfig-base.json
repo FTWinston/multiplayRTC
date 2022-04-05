@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "noImplicitAny": true,
-    "module": "es2020",
     "moduleResolution": "node",
-    "target": "es6",
     "jsx": "react",
     "allowJs": true,
     "declaration": true,
@@ -11,6 +9,6 @@
     "strictNullChecks": true
   },
   "include": [
-    ".", "../declarations.d.ts",
+    "src"
   ]
 }

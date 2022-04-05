@@ -1,25 +1,23 @@
-import { IServerRulesEntity } from '../../framework/server/IServerEntity';
-import { ClientID, IServer } from '../../framework/server/IServer';
+import { IServerRulesEntity, IServer } from 'multiplayrtc';
 import { TestClientCommand } from '../shared/TestClientCommand';
 import { TestServerEvent } from '../shared/TestServerEvent';
 import { Player } from './Player';
-import { EntityID } from '../../framework/shared/entityTypes';
 
-export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCommand, TestServerEvent> {
+export class TestGameRules implements IServerRulesEntity<number, TestClientCommand, TestServerEvent> {
     public readonly type = 'rules';
 
-    private server: IServer<EntityID, TestServerEvent>;
+    private server: IServer<number, TestServerEvent>;
 
     // TODO: Can we avoid HAVING to do this to avoid trying to send the server?
     determineFieldsToSend() {
         return [];
     }
 
-    serverStarted(server: IServer<EntityID, TestServerEvent>) {
+    serverStarted(server: IServer<number, TestServerEvent>) {
         this.server = server;
     }
 
-    clientJoined(client: ClientID) {
+    clientJoined(client: string) {
         console.log(`${client} connected`);
 
         const player = new Player(0, 0);
@@ -27,7 +25,7 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
         return this.server.state.addEntity(player);
     }
 
-    clientDisconnected(client: ClientID) {
+    clientDisconnected(client: string) {
         console.log(`${client} disconnected`);
 
         const entityId = this.server.clients.get(client);
@@ -37,7 +35,7 @@ export class TestGameRules implements IServerRulesEntity<EntityID, TestClientCom
         }
     }
 
-    commandReceived(client: ClientID, command: TestClientCommand) {
+    commandReceived(client: string, command: TestClientCommand) {
         const entityId = this.server.clients.get(client)!;
         const player = this.server.state.entities.get(entityId) as Player;
 

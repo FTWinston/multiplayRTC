@@ -128,17 +128,18 @@ export class ServerSignalConnection<TClientCommand, TServerEvent>
 
         this.connectingPeers.set(name, peer);
 
-        peer.onsignalingstatechange = 
-        peer.oniceconnectionstatechange
+        peer.onsignalingstatechange = peer.oniceconnectionstatechange;
         peer.onconnectionstatechange = () => {
             if (process.env.NODE_ENV === 'development') {
-                console.log(`server peer state changed: ${peer.connectionState}, ${peer.signalingState}, ${peer.iceConnectionState}`);
+                console.log(
+                    `server peer state changed: ${peer.connectionState}, ${peer.signalingState}, ${peer.iceConnectionState}`
+                );
             }
 
             if (
-                this.connectingPeers.has(name)
-                && peer.signalingState === 'stable'
-                && peer.iceConnectionState === 'connected'
+                this.connectingPeers.has(name) &&
+                peer.signalingState === 'stable' &&
+                peer.iceConnectionState === 'connected'
             ) {
                 this.connectingPeers.delete(name);
                 this.createConnection(name, peer);

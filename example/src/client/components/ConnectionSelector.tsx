@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { ServerConnection } from '../../../framework/client/ServerConnection';
-import { RemoteServerConnection } from '../../../framework/client/RemoteServerConnection';
+import { ClientState, CommonEvent, ServerConnection, LocalServerConnection, RemoteServerConnection, defaultConnectionConfig } from 'multiplayrtc';
 import { TestClientCommand } from '../../shared/TestClientCommand';
 import { TestServerEvent } from '../../shared/TestServerEvent';
-import { LocalServerConnection } from '../../../framework/client/LocalServerConnection';
-import { defaultConnectionConfig } from '../../../framework/shared/SignalConnection';
-import { CommonEvent } from '../../../framework/shared/ServerToClientMessage';
-import { ClientState } from '../../../framework/shared/entityTypes';
 
 export type TypedConnection = ServerConnection<
     TestClientCommand,

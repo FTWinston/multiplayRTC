@@ -1,5 +1,4 @@
-import { createListenServer } from '../../framework/server/createListenServer';
-import { defaultConnectionConfig } from '../../framework/shared/SignalConnection';
+import { createListenServer, defaultConnectionConfig } from 'multiplayrtc';
 import { TestGameRules } from './TestGameRules';
 
 export default {} as typeof Worker & (new () => Worker);
