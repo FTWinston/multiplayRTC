@@ -4,7 +4,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
   entry: {
-    client: './src/example/client/index.tsx'
+    client: './src/client/index.tsx'
   },
   module: {
     rules: [
@@ -25,7 +25,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      template: './src/example/client/index.html'
+      template: './src/client/index.html'
     }),
   ],
   output: {

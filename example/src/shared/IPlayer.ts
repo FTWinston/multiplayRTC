@@ -1,4 +1,4 @@
-import { IServerEntity } from '../../framework/server/IServerEntity';
+import { IServerEntity } from 'multiplayrtc';
 
 export interface IPlayer extends IServerEntity {
     type: 'player';
