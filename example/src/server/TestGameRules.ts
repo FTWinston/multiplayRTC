@@ -1,4 +1,4 @@
-import { IServerRulesEntity, IServer } from 'multiplayrtc';
+import { IServerRulesEntity, IServer } from 'multiplayrtc/server';
 import { TestClientCommand } from '../shared/TestClientCommand';
 import { TestServerEvent } from '../shared/TestServerEvent';
 import { Player } from './Player';

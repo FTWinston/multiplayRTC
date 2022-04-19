@@ -1,4 +1,5 @@
-import { createListenServer, defaultConnectionConfig } from 'multiplayrtc';
+import { defaultConnectionConfig } from 'multiplayrtc';
+import { createListenServer } from 'multiplayrtc/server';
 import { TestGameRules } from './TestGameRules';
 
 export default {} as typeof Worker & (new () => Worker);

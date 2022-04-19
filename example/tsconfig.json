@@ -2,7 +2,7 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "module": "es2020",
-    "moduleResolution": "node",
+    "moduleResolution": "node12",
     "target": "es6",
     "jsx": "react",
     "allowJs": true,

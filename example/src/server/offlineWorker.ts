@@ -1,4 +1,4 @@
-import { createOfflineServer } from 'multiplayrtc';
+import { createOfflineServer } from 'multiplayrtc/server';
 import { TestGameRules } from './TestGameRules';
 
 export default {} as typeof Worker & (new () => Worker);

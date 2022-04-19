@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ClientState, CommonEvent, ServerConnection, LocalServerConnection, RemoteServerConnection, defaultConnectionConfig } from 'multiplayrtc';
+import { ClientState, CommonEvent, defaultConnectionConfig } from 'multiplayrtc';
+import { ServerConnection, LocalServerConnection, RemoteServerConnection } from 'multiplayrtc/client';
 import { TestClientCommand } from '../../shared/TestClientCommand';
 import { TestServerEvent } from '../../shared/TestServerEvent';
 
