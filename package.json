@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "",
   "dependencies": {
+    "typescript": "^4.7.0-beta"
   },
   "repository": {
     "type": "git",
